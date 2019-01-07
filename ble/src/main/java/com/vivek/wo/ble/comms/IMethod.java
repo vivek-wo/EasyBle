@@ -1,4 +1,4 @@
-package com.vivek.wo.ble.handler;
+package com.vivek.wo.ble.comms;
 
 /**
  * Created by VIVEK-WO on 2018/12/10.

@@ -3,11 +3,7 @@ package com.vivek.wo.ble.comms;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.content.Context;
-
-import com.vivek.wo.ble.handler.FunctionToken;
-import com.vivek.wo.ble.handler.ICallback;
-import com.vivek.wo.ble.handler.IMethod;
-import com.vivek.wo.ble.handler.IToken;
+import android.os.Handler;
 
 public class BluetoothComms extends GattComms {
     private IQueueHandler mQueueHandler;
@@ -22,12 +18,14 @@ public class BluetoothComms extends GattComms {
         mQueueHandler = queueHandler;
     }
 
-    public IToken connect() {
-        return connect(null);
+    public void connect() {
+        connect(null);
     }
 
-    public IToken connect(ICallback<Boolean> callback) {
-        return enqueue(callback, new IMethod() {
+    public void connect(IConnectCallback callback) {
+        QHandler h = new QHandler();
+        h.dos();
+        IToken token = new FunctionToken(mQueueHandler).callback(callback).method(new IMethod() {
             @Override
             public Object onMethod(Object[] args) {
                 connect(bluetoothDeviceExtend.getBluetoothDevice(), true);
@@ -40,7 +38,7 @@ public class BluetoothComms extends GattComms {
 
     }
 
-    public void read(ICallback callback) {
+    public void read(ITimeoutCallback callback) {
 
     }
 
@@ -49,26 +47,19 @@ public class BluetoothComms extends GattComms {
         super.onCharacteristicWrite(gatt, characteristic, status);
     }
 
-    public IToken write(byte[] data) {
+    public FunctionToken write(byte[] data) {
         return write(data, null);
     }
 
-    public IToken write(byte[] data, ICallback callback) {
-
-        return enqueue(new Object[]{data}, callback, new IMethod() {
-            @Override
-            public Object onMethod(Object[] args) {
-                write(null, (byte[]) args[0]);
-                return null;
-            }
-        });
+    public FunctionToken write(byte[] data, ITimeoutCallback callback) {
+        return null;
     }
 
     public void notify(boolean enable, boolean isIndication) {
 
     }
 
-    public void notify(boolean enable, boolean isIndication, ICallback callback) {
+    public void notify(boolean enable, boolean isIndication, ITimeoutCallback callback) {
 
     }
 
@@ -76,7 +67,7 @@ public class BluetoothComms extends GattComms {
 
     }
 
-    public void rssi(ICallback callback) {
+    public void rssi(ITimeoutCallback callback) {
 
     }
 
@@ -85,16 +76,17 @@ public class BluetoothComms extends GattComms {
 
     }
 
-    public void disconnect(ICallback callback) {
+    public void disconnect(ITimeoutCallback callback) {
 
     }
 
-    IToken enqueue(ICallback callback, IMethod method) {
-        return enqueue(null, callback, method);
-    }
+    class QHandler extends Handler {
+        QHandler() {
 
-    IToken enqueue(Object[] args, ICallback callback, IMethod method) {
-        IToken token = new FunctionToken().args(args).callback(callback).method(method);
-        return token;
+        }
+
+        void dos() {
+            System.out.println(" " + bluetoothDeviceExtend);
+        }
     }
 }

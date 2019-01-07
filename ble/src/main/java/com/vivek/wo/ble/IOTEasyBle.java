@@ -7,8 +7,6 @@ import android.content.Context;
 
 import com.vivek.wo.ble.comms.BluetoothComms;
 import com.vivek.wo.ble.comms.BluetoothDeviceExtend;
-import com.vivek.wo.ble.handler.ICallback;
-import com.vivek.wo.ble.handler.IToken;
 import com.vivek.wo.ble.scan.IScanCallback;
 import com.vivek.wo.ble.scan.SingleFilterScanCallback;
 
@@ -48,17 +46,6 @@ public class IOTEasyBle {
             @Override
             public void onDeviceFound(BluetoothDeviceExtend bluetoothDeviceExtend, List<BluetoothDeviceExtend> result) {
                 mBluetoothComms = new BluetoothComms(mContext, bluetoothDeviceExtend);
-                mBluetoothComms.connect(new ICallback<Boolean>() {
-                    @Override
-                    public void onCallback(IToken<Boolean> token, Boolean aBoolean) {
-                        mBluetoothComms.write(new byte[1], new ICallback() {
-                            @Override
-                            public void onCallback(IToken token, Object o) {
-
-                            }
-                        });
-                    }
-                });
             }
 
             @Override
@@ -72,8 +59,9 @@ public class IOTEasyBle {
     }
 
     private void directConnect() {
-        if (mBluetoothAdapter.checkBluetoothAddress(deviceAddress)) {
-            BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(deviceAddress);
+        if (!BluetoothAdapter.checkBluetoothAddress(deviceAddress)) {
+            return;
         }
+        BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(deviceAddress);
     }
 }
