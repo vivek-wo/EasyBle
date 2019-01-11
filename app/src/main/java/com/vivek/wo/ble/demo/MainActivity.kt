@@ -17,6 +17,7 @@ import com.vivek.wo.ble.PrintLog
 import com.vivek.wo.ble.comms.BluetoothComms
 import com.vivek.wo.ble.comms.BluetoothDeviceExtend
 import com.vivek.wo.ble.comms.IConnectCallback
+import com.vivek.wo.ble.comms.Token
 import com.vivek.wo.ble.scan.IScanCallback
 import com.vivek.wo.ble.scan.ScanCallback
 import kotlinx.android.synthetic.main.activity_main.*
@@ -72,16 +73,16 @@ class MainActivity : AppCompatActivity() {
                     deviceItemList.add(bluetoothDeviceExtend!!)
                     var bluetoothComms = BluetoothComms(this@MainActivity, bluetoothDeviceExtend)
                     val token = bluetoothComms.connect(object : IConnectCallback {
-                        override fun onConnected(bluetoothComms: BluetoothComms?) {
+                        override fun onConnected(token: Token?) {
                         }
 
-                        override fun onConnectFailure(bluetoothComms: BluetoothComms?, status: Int) {
+                        override fun onConnectFailure(token: Token?, status: Int) {
                         }
 
-                        override fun onTimeout() {
+                        override fun onTimeout(token: Token?) {
                         }
 
-                        override fun onDisconnected(bluetoothComms: BluetoothComms?, isActiveDisconnect: Boolean) {
+                        override fun onDisconnected(token: Token?, isActiveDisconnect: Boolean) {
                         }
 
                     }).timeout(1 * 1000).execute()
@@ -116,22 +117,25 @@ class MainActivity : AppCompatActivity() {
     private fun onItemClickListener(bluetoothDeviceExtend: BluetoothDeviceExtend) {
         PrintLog.log("onItemClickListener", bluetoothDeviceExtend.toString())
         var bluetoothComms = BluetoothComms(this, bluetoothDeviceExtend)
-        val token = bluetoothComms.connect(object : IConnectCallback {
-            override fun onConnected(bluetoothComms: BluetoothComms?) {
-                runOnUiThread { recycleViewAdapter!!.notifyDataSetChanged() }
-            }
+        val token = bluetoothComms
+                .connect(object : IConnectCallback {
+                    override fun onConnected(token: Token?) {
+                        runOnUiThread { recycleViewAdapter!!.notifyDataSetChanged() }
+                    }
 
-            override fun onConnectFailure(bluetoothComms: BluetoothComms?, status: Int) {
-            }
+                    override fun onConnectFailure(token: Token?, status: Int) {
+                    }
 
-            override fun onTimeout() {
-            }
+                    override fun onTimeout(token: Token?) {
+                    }
 
-            override fun onDisconnected(bluetoothComms: BluetoothComms?, isActiveDisconnect: Boolean) {
-                runOnUiThread { recycleViewAdapter!!.notifyDataSetChanged() }
-            }
+                    override fun onDisconnected(token: Token?, isActiveDisconnect: Boolean) {
+                        runOnUiThread { recycleViewAdapter!!.notifyDataSetChanged() }
+                    }
 
-        }).timeout(2 * 1000).execute()
+                })
+                .timeout(2 * 1000)
+                .execute()
     }
 
     class RecycleViewAdapter(private val deviceItemList: List<BluetoothDeviceExtend>,

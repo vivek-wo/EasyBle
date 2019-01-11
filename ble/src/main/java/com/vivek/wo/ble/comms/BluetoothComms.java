@@ -8,63 +8,94 @@ import com.vivek.wo.ble.PrintLog;
 
 public class BluetoothComms extends GattComms {
     private static final String TAG = "BluetoothComms";
-    private IQueueHandler mQueueHandler;
+    private FunctionQueueHandler mFunctionQueueHandler;
     BluetoothDeviceExtend bluetoothDeviceExtend;
 
     public BluetoothComms(Context context, BluetoothDeviceExtend bluetoothDeviceExtend) {
         super(context);
         this.bluetoothDeviceExtend = bluetoothDeviceExtend;
-        mQueueHandler = FunctionQueueHandler.getMainQueueHandler();
+        mFunctionQueueHandler = FunctionQueueHandler.getMainQueueHandler();
     }
 
-    public void setQueueHandler(IQueueHandler queueHandler) {
-        mQueueHandler = queueHandler;
+    /**
+     * 超时返回
+     *
+     * @param token
+     */
+    void onTimeoutCallback(Token token) {
+        Token currentToken;
+        synchronized (this) {
+            currentToken = mFunctionQueueHandler.get();
+            PrintLog.log(TAG, token + " onTimeoutCallback " + token.getTokenContext()
+                    + " And Current " + currentToken);
+            if (currentToken == token) {
+                //当前执行超时
+                if (currentToken.isCompleted()) {
+                    return;
+                }
+                currentToken.setCompleted(true);
+            } else {
+                //队列Function执行超时
+                token.setCompleted(true);
+                mFunctionQueueHandler.remove(token);
+            }
+        }
+        if (currentToken == token) {
+            mFunctionQueueHandler.dequeue();
+        }
+        ITimeoutCallback callback = token.getCallback();
+        if (callback != null) {
+            callback.onTimeout(token);
+        }
     }
 
-    public IQueueHandler getQueueHandler() {
-        return mQueueHandler;
-    }
-
-    void onTimeoutCallback(IToken token) {
-        mQueueHandler.onTimeout(token);
+    void execute(Token token) {
+        mFunctionQueueHandler.enqueue(token);
     }
 
     @Override
     void onConnectionStateChange(BluetoothGatt gatt, ConnectState connectState) {
         super.onConnectionStateChange(gatt, connectState);
-        IToken token = mQueueHandler.get();
-        if (token == null) {
-            disconnect();
+        Token currentToken;
+        synchronized (this) {
+            currentToken = mFunctionQueueHandler.get();
+            PrintLog.log(TAG, currentToken + " onConnectionStateChange " + connectState.getCode()
+                    + " " + (currentToken != null ? currentToken.getTokenContext() : ""));
+            if (currentToken == null) {
+                return;
+            }
+            if (currentToken.isCompleted()) {
+                return;
+            }
+            currentToken.setCompleted(true);
+        }
+        if (currentToken.getTokenContext() != "method-connect") {
             return;
         }
-        PrintLog.log(TAG, token + " onConnectionStateChange " + connectState.getCode());
-        if (!token.getMethodContext().equals("method-connect")) {
-            return;
-        }
-        IConnectCallback callback = (IConnectCallback) token.getCallback();
+        mFunctionQueueHandler.dequeue();
+        IConnectCallback callback = (IConnectCallback) currentToken.getCallback();
         if (callback != null) {
             if (connectState == ConnectState.CONNECT_SUCCESS) {
                 //TODO 临时添加
                 bluetoothDeviceExtend.setConnected(true);
-                callback.onConnected(this);
+                callback.onConnected(currentToken);
             } else {
                 if (connectState == ConnectState.CONNECT_DISCONNECT) {
                     //TODO 临时添加
                     bluetoothDeviceExtend.setConnected(false);
-                    callback.onDisconnected(this, isActiveDisconnect);
+                    callback.onDisconnected(currentToken, isActiveDisconnect);
                 } else {
-                    callback.onConnectFailure(this, connectState.getCode());
+                    callback.onConnectFailure(currentToken, connectState.getCode());
                 }
             }
         }
-        mQueueHandler.dequeue();
     }
 
-    public IToken connect() {
+    public Token connect() {
         return connect(null);
     }
 
-    public IToken connect(IConnectCallback callback) {
+    public Token connect(IConnectCallback callback) {
         return new FunctionToken("method-connect", this)
                 .callback(callback).method(new IMethod() {
                     @Override
