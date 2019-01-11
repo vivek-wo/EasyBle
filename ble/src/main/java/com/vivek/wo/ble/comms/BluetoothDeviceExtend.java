@@ -20,6 +20,17 @@ public class BluetoothDeviceExtend implements Parcelable {
     private int rssi;
     private byte[] scanRecord;
 
+    // TODO临时添加
+    private boolean isConnected = false;
+
+    public boolean isConnected() {
+        return isConnected;
+    }
+
+    public void setConnected(boolean connected) {
+        isConnected = connected;
+    }
+
     public BluetoothDeviceExtend(BluetoothDevice bluetoothDevice, int rssi, byte[] scanRecord) {
         this.bluetoothDevice = bluetoothDevice;
         this.rssi = rssi;

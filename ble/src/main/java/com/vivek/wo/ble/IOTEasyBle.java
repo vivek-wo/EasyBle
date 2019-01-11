@@ -42,7 +42,7 @@ public class IOTEasyBle {
 
 
     private void scanConnect() {
-        new SingleFilterScanCallback(new IScanCallback() {
+        new SingleFilterScanCallback(mBluetoothAdapter, new IScanCallback() {
             @Override
             public void onDeviceFound(BluetoothDeviceExtend bluetoothDeviceExtend, List<BluetoothDeviceExtend> result) {
                 mBluetoothComms = new BluetoothComms(mContext, bluetoothDeviceExtend);

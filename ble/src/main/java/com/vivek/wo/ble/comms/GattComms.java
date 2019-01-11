@@ -11,6 +11,7 @@ import android.content.Context;
 import java.lang.reflect.Method;
 
 public abstract class GattComms extends BluetoothGattCallback {
+    private static final String TAG = "GattComms";
     Context mContext;
     BluetoothGatt mBluetoothGatt;
     volatile ConnectState connectState = ConnectState.CONNECT_INIT;//连接状态
@@ -36,6 +37,7 @@ public abstract class GattComms extends BluetoothGattCallback {
         super.onConnectionStateChange(gatt, status, newState);
         if (newState == BluetoothGatt.STATE_CONNECTED) {
             gatt.discoverServices();
+            return;
         } else if (newState == BluetoothGatt.STATE_DISCONNECTED) {
             if (status == BluetoothGatt.GATT_SUCCESS) {
                 connectState = ConnectState.CONNECT_DISCONNECT;
@@ -45,6 +47,7 @@ public abstract class GattComms extends BluetoothGattCallback {
         } else if (newState == BluetoothGatt.STATE_CONNECTING) {
             connectState = ConnectState.CONNECT_PROCESS;
         }
+        onConnectionStateChange(gatt, connectState);
     }
 
     /**
@@ -67,6 +70,10 @@ public abstract class GattComms extends BluetoothGattCallback {
             gatt.close();
             connectState = ConnectState.CONNECT_FAILURE;
         }
+        onConnectionStateChange(gatt, connectState);
+    }
+
+    void onConnectionStateChange(BluetoothGatt gatt, ConnectState connectState) {
     }
 
     /**

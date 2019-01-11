@@ -2,9 +2,9 @@ package com.vivek.wo.ble.comms;
 
 public interface IConnectCallback extends ITimeoutCallback {
 
-    void onConnected();
+    void onConnected(BluetoothComms bluetoothComms);
 
-    void onConnectFailure(int status);
+    void onConnectFailure(BluetoothComms bluetoothComms, int status);
 
-    void onDisconnected(boolean isActiveDisconnect);
+    void onDisconnected(BluetoothComms bluetoothComms, boolean isActiveDisconnect);
 }

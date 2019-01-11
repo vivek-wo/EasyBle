@@ -3,35 +3,76 @@ package com.vivek.wo.ble.comms;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.content.Context;
-import android.os.Handler;
+
+import com.vivek.wo.ble.PrintLog;
 
 public class BluetoothComms extends GattComms {
+    private static final String TAG = "BluetoothComms";
     private IQueueHandler mQueueHandler;
     BluetoothDeviceExtend bluetoothDeviceExtend;
 
     public BluetoothComms(Context context, BluetoothDeviceExtend bluetoothDeviceExtend) {
         super(context);
         this.bluetoothDeviceExtend = bluetoothDeviceExtend;
+        mQueueHandler = FunctionQueueHandler.getMainQueueHandler();
     }
 
     public void setQueueHandler(IQueueHandler queueHandler) {
         mQueueHandler = queueHandler;
     }
 
-    public void connect() {
-        connect(null);
+    public IQueueHandler getQueueHandler() {
+        return mQueueHandler;
     }
 
-    public void connect(IConnectCallback callback) {
-        QHandler h = new QHandler();
-        h.dos();
-        IToken token = new FunctionToken(mQueueHandler).callback(callback).method(new IMethod() {
-            @Override
-            public Object onMethod(Object[] args) {
-                connect(bluetoothDeviceExtend.getBluetoothDevice(), true);
-                return null;
+    void onTimeoutCallback(IToken token) {
+        mQueueHandler.onTimeout(token);
+    }
+
+    @Override
+    void onConnectionStateChange(BluetoothGatt gatt, ConnectState connectState) {
+        super.onConnectionStateChange(gatt, connectState);
+        IToken token = mQueueHandler.get();
+        if (token == null) {
+            disconnect();
+            return;
+        }
+        PrintLog.log(TAG, token + " onConnectionStateChange " + connectState.getCode());
+        if (!token.getMethodContext().equals("method-connect")) {
+            return;
+        }
+        IConnectCallback callback = (IConnectCallback) token.getCallback();
+        if (callback != null) {
+            if (connectState == ConnectState.CONNECT_SUCCESS) {
+                //TODO 临时添加
+                bluetoothDeviceExtend.setConnected(true);
+                callback.onConnected(this);
+            } else {
+                if (connectState == ConnectState.CONNECT_DISCONNECT) {
+                    //TODO 临时添加
+                    bluetoothDeviceExtend.setConnected(false);
+                    callback.onDisconnected(this, isActiveDisconnect);
+                } else {
+                    callback.onConnectFailure(this, connectState.getCode());
+                }
             }
-        });
+        }
+        mQueueHandler.dequeue();
+    }
+
+    public IToken connect() {
+        return connect(null);
+    }
+
+    public IToken connect(IConnectCallback callback) {
+        return new FunctionToken("method-connect", this)
+                .callback(callback).method(new IMethod() {
+                    @Override
+                    public Object onMethod(Object[] args) {
+                        connect(bluetoothDeviceExtend.getBluetoothDevice(), true);
+                        return true;
+                    }
+                });
     }
 
     public void read() {
@@ -73,20 +114,10 @@ public class BluetoothComms extends GattComms {
 
     @Override
     public void disconnect() {
-
+        super.disconnect();
     }
 
     public void disconnect(ITimeoutCallback callback) {
 
-    }
-
-    class QHandler extends Handler {
-        QHandler() {
-
-        }
-
-        void dos() {
-            System.out.println(" " + bluetoothDeviceExtend);
-        }
     }
 }

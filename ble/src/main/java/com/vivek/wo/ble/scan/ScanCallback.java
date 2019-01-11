@@ -3,9 +3,11 @@ package com.vivek.wo.ble.scan;
 import android.annotation.TargetApi;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothManager;
 import android.bluetooth.le.ScanFilter;
 import android.bluetooth.le.ScanResult;
 import android.bluetooth.le.ScanSettings;
+import android.content.Context;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -26,7 +28,7 @@ public class ScanCallback extends android.bluetooth.le.ScanCallback implements I
     private static final int DEFAULT_SCANSECOND = 10;//默认搜索时间
     private Handler handler = new Handler(Looper.myLooper());
     private AtomicBoolean atomicBoolean = new AtomicBoolean(false);
-    private IScanCallback iScanCallback;
+    private IScanCallback scanCallback;
     private BluetoothAdapter bluetoothAdapter;
     private BluetoothAdapter.LeScanCallback leScanCallback;
     protected List<ScanFilter> scanFilterList;
@@ -36,8 +38,22 @@ public class ScanCallback extends android.bluetooth.le.ScanCallback implements I
     private List<BluetoothDeviceExtend> bluetoothDeviceExtendList;
     private int scanSecond = DEFAULT_SCANSECOND;
 
-    public ScanCallback(IScanCallback iScanCallback) {
-        this.iScanCallback = iScanCallback;
+    public ScanCallback(Context context, IScanCallback scanCallback) {
+        this.scanCallback = scanCallback;
+        bleDeviceFoundMap = new LinkedHashMap<>();
+        bluetoothDeviceExtendList = new ArrayList<>();
+        BluetoothManager bluetoothManager = (BluetoothManager) context
+                .getSystemService(Context.BLUETOOTH_SERVICE);
+        this.bluetoothAdapter = bluetoothManager.getAdapter();
+        if (LOLLIPOP()) {
+            scanFilterList = new ArrayList<>();
+            scanSettingsBuilder = new ScanSettings.Builder();
+        }
+    }
+
+    public ScanCallback(BluetoothAdapter bluetoothAdapter, IScanCallback scanCallback) {
+        this.scanCallback = scanCallback;
+        this.bluetoothAdapter = bluetoothAdapter;
         bleDeviceFoundMap = new LinkedHashMap<>();
         bluetoothDeviceExtendList = new ArrayList<>();
         if (LOLLIPOP()) {
@@ -45,12 +61,6 @@ public class ScanCallback extends android.bluetooth.le.ScanCallback implements I
             scanSettingsBuilder = new ScanSettings.Builder();
         }
     }
-
-    public ScanCallback initBluetoothAdapter(BluetoothAdapter bluetoothAdapter) {
-        this.bluetoothAdapter = bluetoothAdapter;
-        return this;
-    }
-
 
     /**
      * 设置搜索时间
@@ -132,11 +142,11 @@ public class ScanCallback extends android.bluetooth.le.ScanCallback implements I
                     @Override
                     public void run() {
                         if (atomicBoolean.compareAndSet(true, false)) {
-                            if (iScanCallback != null) {
+                            if (scanCallback != null) {
                                 if (!bleDeviceFoundMap.isEmpty()) {
-                                    iScanCallback.onScanFinish(bluetoothDeviceExtendList);
+                                    scanCallback.onScanFinish(bluetoothDeviceExtendList);
                                 } else {
-                                    iScanCallback.onScanTimeout();
+                                    scanCallback.onScanTimeout();
                                 }
                             }
                             stopOrTimeoutScan();
@@ -191,12 +201,12 @@ public class ScanCallback extends android.bluetooth.le.ScanCallback implements I
                 bluetoothDeviceExtend = new BluetoothDeviceExtend(device, rssi, scanRecord);
                 bleDeviceFoundMap.put(device.getAddress(), bluetoothDeviceExtend);
             }
-            if (iScanCallback != null) {
+            if (scanCallback != null) {
                 bluetoothDeviceExtendList.clear();
                 bluetoothDeviceExtendList.addAll(bleDeviceFoundMap.values());
-                iScanCallback.onDeviceFound(bluetoothDeviceExtend, bluetoothDeviceExtendList);
+                scanCallback.onDeviceFound(bluetoothDeviceExtend, bluetoothDeviceExtendList);
                 if (this instanceof SingleFilterScanCallback) {
-                    iScanCallback.onScanFinish(bluetoothDeviceExtendList);
+                    scanCallback.onScanFinish(bluetoothDeviceExtendList);
                 }
             }
         }

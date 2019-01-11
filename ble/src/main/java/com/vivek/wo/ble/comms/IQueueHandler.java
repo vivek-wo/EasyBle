@@ -1,11 +1,12 @@
 package com.vivek.wo.ble.comms;
 
-public interface IQueueHandler<T extends IToken> {
+public interface IQueueHandler {
 
-    void enqueue(T t);
+    void enqueue(IToken token);
 
-    T get();
+    IToken get();
 
     void dequeue();
 
+    boolean onTimeout(IToken token);
 }
