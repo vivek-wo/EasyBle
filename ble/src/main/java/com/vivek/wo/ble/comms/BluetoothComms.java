@@ -2,6 +2,7 @@ package com.vivek.wo.ble.comms;
 
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
+import android.bluetooth.BluetoothGattDescriptor;
 import android.content.Context;
 
 import com.vivek.wo.ble.PrintLog;
@@ -159,10 +160,10 @@ public class BluetoothComms extends GattComms {
             return;
         }
         mFunctionQueueHandler.dequeue();
-        IReadCallback callback = (IReadCallback) currentToken.getCallback();
+        IWriteCallback callback = (IWriteCallback) currentToken.getCallback();
         if (callback != null) {
-            callback.onRead(currentToken, new String[]{characteristic.getService().getUuid().toString(),
-                    characteristic.getUuid().toString()}, status, characteristic.getValue());
+            callback.onWrite(currentToken, new String[]{characteristic.getService().getUuid().toString(),
+                    characteristic.getUuid().toString()}, status);
         }
     }
 
@@ -181,20 +182,42 @@ public class BluetoothComms extends GattComms {
         });
     }
 
-    public void notify(boolean enable, boolean isIndication) {
 
+    public Token notify(String serviceUUID, String characteristicUUID, String descriptorUUID,
+                        boolean enable, boolean isIndication) {
+        return notify(serviceUUID, characteristicUUID, descriptorUUID, enable,
+                isIndication, null);
     }
 
-    public void notify(boolean enable, boolean isIndication, ITimeoutCallback callback) {
-
+    public Token notify(String serviceUUID, String characteristicUUID, String descriptorUUID,
+                        boolean enable, boolean isIndication, ITimeoutCallback callback) {
+        return new FunctionUuidToken(serviceUUID, characteristicUUID, "method-notify",
+                this).args(enable, isIndication).callback(callback).method(new IMethod() {
+            @Override
+            public Object onMethod(Object[] args) {
+                return enable((BluetoothGattCharacteristic) args[0], (BluetoothGattDescriptor) args[1],
+                        (Boolean) args[2], (Boolean) args[3]);
+            }
+        });
     }
 
-    public void rssi() {
-
+    @Override
+    public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status) {
+        super.onReadRemoteRssi(gatt, rssi, status);
     }
 
-    public void rssi(ITimeoutCallback callback) {
+    public Token rssi() {
+        return rssi(null);
+    }
 
+    public Token rssi(IRssiCallback callback) {
+        return new FunctionToken("method-rssi", this).callback(callback)
+                .method(new IMethod() {
+                    @Override
+                    public Object onMethod(Object[] args) {
+                        return readRssi();
+                    }
+                });
     }
 
     @Override
