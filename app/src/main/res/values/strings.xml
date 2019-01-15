@@ -1,4 +1,11 @@
 <resources>
     <string name="app_name">EasyBle</string>
     <string name="action_settings">Settings</string>
+
+    <string name="device_connect">连接</string>
+    <string name="device_disconnect">断开</string>
+    <string name="device_write">写数据</string>
+    <string name="device_notify">监听数据</string>
+    <string name="device_not_notify">取消监听</string>
+    <string name="device_read">读数据</string>
 </resources>

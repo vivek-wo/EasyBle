@@ -53,21 +53,29 @@ public class BluetoothComms extends GattComms {
         mFunctionQueueHandler.enqueue(token);
     }
 
-    @Override
-    void onConnectionStateChange(BluetoothGatt gatt, ConnectState connectState) {
-        super.onConnectionStateChange(gatt, connectState);
+    Token onCallbackCurrentToken() {
         Token currentToken;
         synchronized (this) {
             currentToken = mFunctionQueueHandler.get();
-            PrintLog.log(TAG, currentToken + " onConnectionStateChange " + connectState.getCode()
+            PrintLog.log(TAG, currentToken + " onCallbackCurrentToken " + connectState.getCode()
                     + " " + (currentToken != null ? currentToken.getTokenContext() : ""));
             if (currentToken == null) {
-                return;
+                return null;
             }
             if (currentToken.isCompleted()) {
-                return;
+                return null;
             }
             currentToken.setCompleted(true);
+        }
+        return currentToken;
+    }
+
+    @Override
+    void onConnectionStateChange(BluetoothGatt gatt, ConnectState connectState) {
+        super.onConnectionStateChange(gatt, connectState);
+        Token currentToken = onCallbackCurrentToken();
+        if (currentToken == null) {
+            return;
         }
         if (currentToken.getTokenContext() != "method-connect") {
             return;
@@ -106,25 +114,71 @@ public class BluetoothComms extends GattComms {
                 });
     }
 
-    public void read() {
-
+    @Override
+    public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
+        super.onCharacteristicRead(gatt, characteristic, status);
+        Token currentToken = onCallbackCurrentToken();
+        if (currentToken == null) {
+            return;
+        }
+        if (currentToken.getTokenContext() != "method-read") {
+            return;
+        }
+        mFunctionQueueHandler.dequeue();
+        IReadCallback callback = (IReadCallback) currentToken.getCallback();
+        if (callback != null) {
+            callback.onRead(currentToken, new String[]{characteristic.getService().getUuid().toString(),
+                    characteristic.getUuid().toString()}, status, characteristic.getValue());
+        }
     }
 
-    public void read(ITimeoutCallback callback) {
+    public Token read(String serviceUUID, String characteristicUUID) {
+        return read(serviceUUID, characteristicUUID, null);
+    }
 
+    public Token read(String serviceUUID, String characteristicUUID,
+                      IReadCallback callback) {
+        return new FunctionUuidToken(serviceUUID, characteristicUUID, "method-read",
+                this).callback(callback).method(new IMethod() {
+            @Override
+            public Object onMethod(Object[] args) {
+                return read((BluetoothGattCharacteristic) args[0]);
+            }
+        });
     }
 
     @Override
-    public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
+    public void onCharacteristicWrite(BluetoothGatt gatt,
+                                      BluetoothGattCharacteristic characteristic, int status) {
         super.onCharacteristicWrite(gatt, characteristic, status);
+        Token currentToken = onCallbackCurrentToken();
+        if (currentToken == null) {
+            return;
+        }
+        if (currentToken.getTokenContext() != "method-write") {
+            return;
+        }
+        mFunctionQueueHandler.dequeue();
+        IReadCallback callback = (IReadCallback) currentToken.getCallback();
+        if (callback != null) {
+            callback.onRead(currentToken, new String[]{characteristic.getService().getUuid().toString(),
+                    characteristic.getUuid().toString()}, status, characteristic.getValue());
+        }
     }
 
-    public FunctionToken write(byte[] data) {
-        return write(data, null);
+    public Token write(String serviceUUID, String characteristicUUID, byte[] data) {
+        return write(serviceUUID, characteristicUUID, data, null);
     }
 
-    public FunctionToken write(byte[] data, ITimeoutCallback callback) {
-        return null;
+    public Token write(String serviceUUID, String characteristicUUID, byte[] data,
+                       ITimeoutCallback callback) {
+        return new FunctionUuidToken(serviceUUID, characteristicUUID, "method-write",
+                this).args(data).callback(callback).method(new IMethod() {
+            @Override
+            public Object onMethod(Object[] args) {
+                return write((BluetoothGattCharacteristic) args[0], (byte[]) args[2]);
+            }
+        });
     }
 
     public void notify(boolean enable, boolean isIndication) {

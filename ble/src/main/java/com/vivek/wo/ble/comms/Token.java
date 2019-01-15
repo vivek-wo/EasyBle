@@ -1,5 +1,7 @@
 package com.vivek.wo.ble.comms;
 
+import java.util.Arrays;
+
 public abstract class Token implements Runnable {
     private String tokenContext;
     private long timeoutMillis;
@@ -33,7 +35,14 @@ public abstract class Token implements Runnable {
     }
 
     public Token args(Object... args) {
-        this.args = args;
+        if (this.args == null) {
+            this.args = args;
+        } else {
+            Object[] tempArgs = this.args;
+            this.args = args;
+            this.args = Arrays.copyOf(this.args, this.args.length + tempArgs.length);
+            System.arraycopy(tempArgs, 0, this.args, this.args.length, tempArgs.length);
+        }
         return this;
     }
 

@@ -1,6 +1,7 @@
 package com.vivek.wo.ble.demo
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.support.v4.app.ActivityCompat
@@ -71,23 +72,8 @@ class MainActivity : AppCompatActivity() {
                 if (!deviceItemList.contains(bluetoothDeviceExtend)) {
                     PrintLog.log("MainActivity", bluetoothDeviceExtend.toString())
                     deviceItemList.add(bluetoothDeviceExtend!!)
-                    var bluetoothComms = BluetoothComms(this@MainActivity, bluetoothDeviceExtend)
-                    val token = bluetoothComms.connect(object : IConnectCallback {
-                        override fun onConnected(token: Token?) {
-                        }
-
-                        override fun onConnectFailure(token: Token?, status: Int) {
-                        }
-
-                        override fun onTimeout(token: Token?) {
-                        }
-
-                        override fun onDisconnected(token: Token?, isActiveDisconnect: Boolean) {
-                        }
-
-                    }).timeout(1 * 1000).execute()
                 }
-                setAdapter();
+                setAdapter()
             }
 
             override fun onScanFinish(result: MutableList<BluetoothDeviceExtend>?) {
@@ -120,7 +106,10 @@ class MainActivity : AppCompatActivity() {
         val token = bluetoothComms
                 .connect(object : IConnectCallback {
                     override fun onConnected(token: Token?) {
-                        runOnUiThread { recycleViewAdapter!!.notifyDataSetChanged() }
+                        runOnUiThread {
+                            recycleViewAdapter!!.notifyDataSetChanged()
+                            startActivity(Intent(this@MainActivity, DeviceActivity::class.java))
+                        }
                     }
 
                     override fun onConnectFailure(token: Token?, status: Int) {

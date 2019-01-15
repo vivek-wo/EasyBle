@@ -13,7 +13,7 @@ import java.lang.reflect.Method;
 public abstract class GattComms extends BluetoothGattCallback {
     private static final String TAG = "GattComms";
     Context mContext;
-    BluetoothGatt mBluetoothGatt;
+    protected BluetoothGatt mBluetoothGatt;
     volatile ConnectState connectState = ConnectState.CONNECT_INIT;//连接状态
     boolean isActiveDisconnect = false;//是否主动断开连接
 
@@ -257,6 +257,10 @@ public abstract class GattComms extends BluetoothGattCallback {
             e.printStackTrace();
         }
         return false;
+    }
+
+    public BluetoothGatt getBluetoothGatt() {
+        return mBluetoothGatt;
     }
 
     public void disconnect() {
