@@ -15,10 +15,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import com.vivek.wo.ble.PrintLog
-import com.vivek.wo.ble.comms.BluetoothComms
 import com.vivek.wo.ble.comms.BluetoothDeviceExtend
-import com.vivek.wo.ble.comms.IConnectCallback
-import com.vivek.wo.ble.comms.Token
 import com.vivek.wo.ble.scan.IScanCallback
 import com.vivek.wo.ble.scan.ScanCallback
 import kotlinx.android.synthetic.main.activity_main.*
@@ -102,29 +99,10 @@ class MainActivity : AppCompatActivity() {
 
     private fun onItemClickListener(bluetoothDeviceExtend: BluetoothDeviceExtend) {
         PrintLog.log("onItemClickListener", bluetoothDeviceExtend.toString())
-        var bluetoothComms = BluetoothComms(this, bluetoothDeviceExtend)
-        val token = bluetoothComms
-                .connect(object : IConnectCallback {
-                    override fun onConnected(token: Token?) {
-                        runOnUiThread {
-                            recycleViewAdapter!!.notifyDataSetChanged()
-                            startActivity(Intent(this@MainActivity, DeviceActivity::class.java))
-                        }
-                    }
-
-                    override fun onConnectFailure(token: Token?, status: Int) {
-                    }
-
-                    override fun onTimeout(token: Token?) {
-                    }
-
-                    override fun onDisconnected(token: Token?, isActiveDisconnect: Boolean) {
-                        runOnUiThread { recycleViewAdapter!!.notifyDataSetChanged() }
-                    }
-
-                })
-                .timeout(2 * 1000)
-                .execute()
+        var intent = Intent(this@MainActivity,
+                DeviceActivity::class.java)
+        intent.putExtra("bluetoothDeviceExtend", bluetoothDeviceExtend)
+        startActivity(intent)
     }
 
     class RecycleViewAdapter(private val deviceItemList: List<BluetoothDeviceExtend>,

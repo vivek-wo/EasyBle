@@ -69,6 +69,10 @@ public class FunctionQueueHandler extends Handler implements Runnable {
         }
     }
 
+    public void cancelTimeout(Token token) {
+        mTimeoutHandler.removeCallbacks(token);
+    }
+
     public void dequeue() {
         if (mCurrentToken == null) {
             PrintLog.log(tag, "Dequeue Token NULL");

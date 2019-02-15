@@ -3,9 +3,12 @@ package com.vivek.wo.ble.comms;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
+import android.bluetooth.BluetoothGattService;
 import android.content.Context;
 
 import com.vivek.wo.ble.PrintLog;
+
+import java.util.UUID;
 
 public class BluetoothComms extends GattComms {
     private static final String TAG = "BluetoothComms";
@@ -67,6 +70,7 @@ public class BluetoothComms extends GattComms {
                 return null;
             }
             currentToken.setCompleted(true);
+            mFunctionQueueHandler.cancelTimeout(currentToken);
         }
         return currentToken;
     }
@@ -139,13 +143,16 @@ public class BluetoothComms extends GattComms {
 
     public Token read(String serviceUUID, String characteristicUUID,
                       IReadCallback callback) {
-        return new FunctionUuidToken(serviceUUID, characteristicUUID, "method-read",
-                this).callback(callback).method(new IMethod() {
-            @Override
-            public Object onMethod(Object[] args) {
-                return read((BluetoothGattCharacteristic) args[0]);
-            }
-        });
+        BluetoothGattCharacteristic characteristic = findCharacteristic(serviceUUID, characteristicUUID);
+        return new FunctionToken("method-read", this)
+                .args(characteristic)
+                .callback(callback)
+                .method(new IMethod() {
+                    @Override
+                    public Object onMethod(Object[] args) {
+                        return read((BluetoothGattCharacteristic) args[0]);
+                    }
+                });
     }
 
     @Override
@@ -173,15 +180,17 @@ public class BluetoothComms extends GattComms {
 
     public Token write(String serviceUUID, String characteristicUUID, byte[] data,
                        ITimeoutCallback callback) {
-        return new FunctionUuidToken(serviceUUID, characteristicUUID, "method-write",
-                this).args(data).callback(callback).method(new IMethod() {
-            @Override
-            public Object onMethod(Object[] args) {
-                return write((BluetoothGattCharacteristic) args[0], (byte[]) args[2]);
-            }
-        });
+        BluetoothGattCharacteristic characteristic = findCharacteristic(serviceUUID, characteristicUUID);
+        return new FunctionToken("method-write", this)
+                .args(characteristic, data)
+                .callback(callback)
+                .method(new IMethod() {
+                    @Override
+                    public Object onMethod(Object[] args) {
+                        return write((BluetoothGattCharacteristic) args[0], (byte[]) args[1]);
+                    }
+                });
     }
-
 
     public Token notify(String serviceUUID, String characteristicUUID, String descriptorUUID,
                         boolean enable, boolean isIndication) {
@@ -191,14 +200,18 @@ public class BluetoothComms extends GattComms {
 
     public Token notify(String serviceUUID, String characteristicUUID, String descriptorUUID,
                         boolean enable, boolean isIndication, ITimeoutCallback callback) {
-        return new FunctionUuidToken(serviceUUID, characteristicUUID, "method-notify",
-                this).args(enable, isIndication).callback(callback).method(new IMethod() {
-            @Override
-            public Object onMethod(Object[] args) {
-                return enable((BluetoothGattCharacteristic) args[0], (BluetoothGattDescriptor) args[1],
-                        (Boolean) args[2], (Boolean) args[3]);
-            }
-        });
+        BluetoothGattCharacteristic characteristic = findCharacteristic(serviceUUID, characteristicUUID);
+        BluetoothGattDescriptor descriptor = findDescriptor(characteristic, descriptorUUID);
+        return new FunctionToken("method-notify", this)
+                .args(characteristic, descriptor, enable, isIndication)
+                .callback(callback)
+                .method(new IMethod() {
+                    @Override
+                    public Object onMethod(Object[] args) {
+                        return enable((BluetoothGattCharacteristic) args[0], (BluetoothGattDescriptor) args[1],
+                                (Boolean) args[2], (Boolean) args[3]);
+                    }
+                });
     }
 
     @Override
@@ -228,4 +241,29 @@ public class BluetoothComms extends GattComms {
     public void disconnect(ITimeoutCallback callback) {
 
     }
+
+    private BluetoothGattCharacteristic findCharacteristic(String serviceUUID, String characteristicUUID) {
+        BluetoothGattService bluetoothGattService = null;
+        if (serviceUUID != null) {
+            bluetoothGattService = getBluetoothGatt()
+                    .getService(UUID.fromString(serviceUUID));
+        }
+        BluetoothGattCharacteristic characteristic = null;
+        if (bluetoothGattService != null && characteristicUUID != null) {
+            characteristic = bluetoothGattService.
+                    getCharacteristic(UUID.fromString(characteristicUUID));
+        }
+        return characteristic;
+    }
+
+    private BluetoothGattDescriptor findDescriptor(BluetoothGattCharacteristic characteristic,
+                                                   String descriptorUUID) {
+        BluetoothGattDescriptor descriptor = null;
+        if (characteristic != null && descriptorUUID != null) {
+            descriptor = characteristic.
+                    getDescriptor(UUID.fromString(descriptorUUID));
+        }
+        return descriptor;
+    }
+
 }
