@@ -1,6 +1,7 @@
-package com.vivek.wo.ble;
+package com.vivek.wo.ble.comms;
 
 import android.bluetooth.BluetoothGattCharacteristic;
+import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 
 import java.util.List;
@@ -20,7 +21,8 @@ public class CharacteristicHelper {
             List<BluetoothGattCharacteristic> characteristics = service.getCharacteristics();
             for (BluetoothGattCharacteristic c : characteristics) {
                 if ((c.getProperties() & BluetoothGattCharacteristic.PROPERTY_NOTIFY) != 0
-                        && characteristicUUID.equals(c.getUuid())) {
+                        && (characteristicUUID == null || characteristicUUID.equals(c.getUuid()))) {
+
                     characteristic = c;
                     break;
                 }
@@ -29,7 +31,7 @@ public class CharacteristicHelper {
             // If there wasn't Notify Characteristic, check for Indicate
             for (BluetoothGattCharacteristic c : characteristics) {
                 if ((c.getProperties() & BluetoothGattCharacteristic.PROPERTY_INDICATE) != 0
-                        && characteristicUUID.equals(c.getUuid())) {
+                        && (characteristicUUID == null || characteristicUUID.equals(c.getUuid()))) {
                     characteristic = c;
                     break;
                 }
@@ -54,7 +56,8 @@ public class CharacteristicHelper {
         int read = BluetoothGattCharacteristic.PROPERTY_READ;
         List<BluetoothGattCharacteristic> characteristics = service.getCharacteristics();
         for (BluetoothGattCharacteristic c : characteristics) {
-            if ((c.getProperties() & read) != 0 && characteristicUUID.equals(c.getUuid())) {
+            if ((c.getProperties() & read) != 0
+                    && (characteristicUUID == null || characteristicUUID.equals(c.getUuid()))) {
                 characteristic = c;
                 break;
             }
@@ -82,7 +85,7 @@ public class CharacteristicHelper {
             List<BluetoothGattCharacteristic> characteristics = service.getCharacteristics();
             for (BluetoothGattCharacteristic c : characteristics) {
                 if ((c.getProperties() & writeProperty) != 0
-                        && characteristicUUID.equals(c.getUuid())) {
+                        && (characteristicUUID == null || characteristicUUID.equals(c.getUuid()))) {
                     characteristic = c;
                     break;
                 }
@@ -96,5 +99,15 @@ public class CharacteristicHelper {
         } catch (Exception e) {
             return null;
         }
+    }
+
+    public static BluetoothGattDescriptor findDescriptor(BluetoothGattCharacteristic characteristic,
+                                                         UUID descriptorUUID) {
+        BluetoothGattDescriptor descriptor = null;
+        if (characteristic != null && descriptorUUID != null) {
+            descriptor = characteristic.
+                    getDescriptor(descriptorUUID);
+        }
+        return descriptor;
     }
 }

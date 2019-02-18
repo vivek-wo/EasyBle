@@ -143,7 +143,10 @@ public class BluetoothComms extends GattComms {
 
     public Token read(String serviceUUID, String characteristicUUID,
                       IReadCallback callback) {
-        BluetoothGattCharacteristic characteristic = findCharacteristic(serviceUUID, characteristicUUID);
+        BluetoothGattService bluetoothGattService = getBluetoothGatt()
+                .getService(UUID.fromString(serviceUUID));
+        BluetoothGattCharacteristic characteristic = CharacteristicHelper
+                .findReadableCharacteristic(bluetoothGattService, UUID.fromString(characteristicUUID));
         return new FunctionToken("method-read", this)
                 .args(characteristic)
                 .callback(callback)
@@ -180,7 +183,11 @@ public class BluetoothComms extends GattComms {
 
     public Token write(String serviceUUID, String characteristicUUID, byte[] data,
                        ITimeoutCallback callback) {
-        BluetoothGattCharacteristic characteristic = findCharacteristic(serviceUUID, characteristicUUID);
+        BluetoothGattService bluetoothGattService = getBluetoothGatt()
+                .getService(UUID.fromString(serviceUUID));
+        BluetoothGattCharacteristic characteristic = CharacteristicHelper
+                .findWritableCharacteristic(bluetoothGattService, UUID.fromString(characteristicUUID),
+                        BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT);
         return new FunctionToken("method-write", this)
                 .args(characteristic, data)
                 .callback(callback)
@@ -200,8 +207,12 @@ public class BluetoothComms extends GattComms {
 
     public Token notify(String serviceUUID, String characteristicUUID, String descriptorUUID,
                         boolean enable, boolean isIndication, ITimeoutCallback callback) {
-        BluetoothGattCharacteristic characteristic = findCharacteristic(serviceUUID, characteristicUUID);
-        BluetoothGattDescriptor descriptor = findDescriptor(characteristic, descriptorUUID);
+        BluetoothGattService bluetoothGattService = getBluetoothGatt()
+                .getService(UUID.fromString(serviceUUID));
+        BluetoothGattCharacteristic characteristic = CharacteristicHelper
+                .findNotifyCharacteristic(bluetoothGattService, UUID.fromString(characteristicUUID));
+        BluetoothGattDescriptor descriptor = CharacteristicHelper.findDescriptor(characteristic,
+                UUID.fromString(descriptorUUID));
         return new FunctionToken("method-notify", this)
                 .args(characteristic, descriptor, enable, isIndication)
                 .callback(callback)
@@ -240,30 +251,6 @@ public class BluetoothComms extends GattComms {
 
     public void disconnect(ITimeoutCallback callback) {
 
-    }
-
-    private BluetoothGattCharacteristic findCharacteristic(String serviceUUID, String characteristicUUID) {
-        BluetoothGattService bluetoothGattService = null;
-        if (serviceUUID != null) {
-            bluetoothGattService = getBluetoothGatt()
-                    .getService(UUID.fromString(serviceUUID));
-        }
-        BluetoothGattCharacteristic characteristic = null;
-        if (bluetoothGattService != null && characteristicUUID != null) {
-            characteristic = bluetoothGattService.
-                    getCharacteristic(UUID.fromString(characteristicUUID));
-        }
-        return characteristic;
-    }
-
-    private BluetoothGattDescriptor findDescriptor(BluetoothGattCharacteristic characteristic,
-                                                   String descriptorUUID) {
-        BluetoothGattDescriptor descriptor = null;
-        if (characteristic != null && descriptorUUID != null) {
-            descriptor = characteristic.
-                    getDescriptor(UUID.fromString(descriptorUUID));
-        }
-        return descriptor;
     }
 
 }
