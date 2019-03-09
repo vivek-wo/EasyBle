@@ -20,7 +20,7 @@ public class SingleFilterScanCallback extends ScanCallback {
     }
 
     /**
-     * 设置搜索设备MAC地址
+     * 设置搜索设备MAC地址，如若同时设置了DeviceName，此优先级高
      *
      * @param deviceAddress
      * @return
@@ -31,7 +31,7 @@ public class SingleFilterScanCallback extends ScanCallback {
     }
 
     /**
-     * 设置搜索设备名称
+     * 设置搜索设备名称，如若同时设置了DeviceAddress，DeviceAddress设置优先级高
      *
      * @param deviceName
      * @return

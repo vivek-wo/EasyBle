@@ -9,10 +9,8 @@ import android.bluetooth.le.ScanResult;
 import android.bluetooth.le.ScanSettings;
 import android.content.Context;
 import android.os.Build;
-import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.os.ParcelUuid;
 
 import com.vivek.wo.ble.comms.BluetoothDeviceExtend;
 
@@ -20,7 +18,6 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 @TargetApi(Build.VERSION_CODES.LOLLIPOP)
@@ -39,16 +36,8 @@ public class ScanCallback extends android.bluetooth.le.ScanCallback implements I
     private int scanSecond = DEFAULT_SCANSECOND;
 
     public ScanCallback(Context context, IScanCallback scanCallback) {
-        this.scanCallback = scanCallback;
-        bleDeviceFoundMap = new LinkedHashMap<>();
-        bluetoothDeviceExtendList = new ArrayList<>();
-        BluetoothManager bluetoothManager = (BluetoothManager) context
-                .getSystemService(Context.BLUETOOTH_SERVICE);
-        this.bluetoothAdapter = bluetoothManager.getAdapter();
-        if (LOLLIPOP()) {
-            scanFilterList = new ArrayList<>();
-            scanSettingsBuilder = new ScanSettings.Builder();
-        }
+        this(((BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE))
+                .getAdapter(), scanCallback);
     }
 
     public ScanCallback(BluetoothAdapter bluetoothAdapter, IScanCallback scanCallback) {
@@ -56,11 +45,8 @@ public class ScanCallback extends android.bluetooth.le.ScanCallback implements I
         this.bluetoothAdapter = bluetoothAdapter;
         bleDeviceFoundMap = new LinkedHashMap<>();
         bluetoothDeviceExtendList = new ArrayList<>();
-        if (LOLLIPOP()) {
-            scanFilterList = new ArrayList<>();
-            scanSettingsBuilder = new ScanSettings.Builder();
-        }
     }
+
 
     /**
      * 设置搜索时间
@@ -74,41 +60,29 @@ public class ScanCallback extends android.bluetooth.le.ScanCallback implements I
     }
 
     /**
-     * UUID过滤，21版本以上支持
+     * ScanFilter过滤，21版本以上支持
      *
-     * @param serviceUUIDs
+     * @param scanFilter
      * @return
      */
-    public ScanCallback serviceUUID(String... serviceUUIDs) {
-        if (serviceUUIDs != null) {
-            for (String serviceUUID : serviceUUIDs) {
-                ScanFilter filter = new ScanFilter.Builder()
-                        .setServiceUuid(new ParcelUuid(
-                                UUID.fromString(serviceUUID)))
-                        .build();
-                scanFilterList.add(filter);
-            }
+    public ScanCallback addScanFilter(ScanFilter scanFilter) {
+        if (scanFilterList == null) {
+            scanFilterList = new ArrayList<>();
         }
+        scanFilterList.add(scanFilter);
         return this;
     }
 
     /**
-     * 配置，21版本以上支持
+     * ScanSettings配置，21版本以上支持
      *
-     * @param settingBundle
      * @return
      */
-    public ScanCallback scanSettings(Bundle settingBundle) {
-        scanSettingsBuilder.setScanMode((int) settingBundle.getDouble("scanMode"));
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            scanSettingsBuilder.setNumOfMatches((int) settingBundle
-                    .getDouble("numberOfMatches", ScanSettings.MATCH_NUM_MAX_ADVERTISEMENT));
-            scanSettingsBuilder.setMatchMode((int) settingBundle
-                    .getDouble("matchMode", ScanSettings.MATCH_MODE_AGGRESSIVE));
-            scanSettingsBuilder.setNumOfMatches((int) settingBundle
-                    .getDouble("matchNumMaxAdvertisement", ScanSettings.MATCH_NUM_MAX_ADVERTISEMENT));
+    public ScanSettings.Builder getScanSettingsBuilder() {
+        if (scanSettingsBuilder == null) {
+            scanSettingsBuilder = new ScanSettings.Builder();
         }
-        return this;
+        return scanSettingsBuilder;
     }
 
     /**
@@ -126,6 +100,9 @@ public class ScanCallback extends android.bluetooth.le.ScanCallback implements I
     public final void scan() {
         if (atomicBoolean.compareAndSet(false, true)) {
             if (LOLLIPOP()) {
+                if (scanSettingsBuilder == null) {
+                    scanSettingsBuilder = new ScanSettings.Builder();
+                }
                 this.bluetoothAdapter.getBluetoothLeScanner()
                         .startScan(scanFilterList, scanSettingsBuilder.build(), this);
             } else {
@@ -164,10 +141,16 @@ public class ScanCallback extends android.bluetooth.le.ScanCallback implements I
         }
     }
 
+    /**
+     * @return
+     */
     public List<BluetoothDeviceExtend> getLastScanFinishedDeviceList() {
         return new ArrayList<>(bleDeviceFoundMap.values());
     }
 
+    /**
+     * @return
+     */
     public Map<String, BluetoothDeviceExtend> getLastScanFinishedDeviceMap() {
         return bleDeviceFoundMap;
     }
