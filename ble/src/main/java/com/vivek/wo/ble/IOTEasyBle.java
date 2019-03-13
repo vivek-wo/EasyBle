@@ -20,20 +20,13 @@ public class IOTEasyBle {
     private String deviceName;
     private String deviceAddress;
 
-    public IOTEasyBle(Context context) {
-        mBluetoothManager = (BluetoothManager) context
+    public IOTEasyBle(Builder builder) {
+        mContext = builder.context;
+        mBluetoothManager = (BluetoothManager) mContext
                 .getSystemService(Context.BLUETOOTH_SERVICE);
         mBluetoothAdapter = mBluetoothManager.getAdapter();
-    }
-
-    public IOTEasyBle setDeviceName(String deviceName) {
-        this.deviceName = deviceName;
-        return this;
-    }
-
-    public IOTEasyBle setDeviceAddress(String deviceAddress) {
-        this.deviceAddress = deviceAddress;
-        return this;
+        this.deviceName = builder.deviceName;
+        this.deviceAddress = builder.deviceAddress;
     }
 
     public void write(String data) {
@@ -63,5 +56,30 @@ public class IOTEasyBle {
             return;
         }
         BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(deviceAddress);
+    }
+
+    public static final class Builder {
+        private Context context;
+        private String deviceName;
+        private String deviceAddress;
+        private String serviceUUIDString;
+        private String readableCharacteristicUUIDString;
+        private String writableCharacteristicUUIDString;
+        private String notifyOrIndicateCharacteristicUUIDString;
+        private String notifyOrIndicateDescriptorUUIDString;
+
+        public Builder(Context context) {
+            this.context = context;
+        }
+
+        public Builder setDeviceName(String deviceName) {
+            this.deviceName = deviceName;
+            return this;
+        }
+
+        public Builder setDeviceAddress(String deviceAddress) {
+            this.deviceAddress = deviceAddress;
+            return this;
+        }
     }
 }
