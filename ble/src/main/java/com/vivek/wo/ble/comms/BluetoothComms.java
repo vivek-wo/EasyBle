@@ -61,7 +61,7 @@ public class BluetoothComms extends GattComms {
         Token currentToken;
         synchronized (this) {
             currentToken = mFunctionQueueHandler.get();
-            PrintLog.log(TAG, currentToken + " onCallbackCurrentToken " + connectState.getCode()
+            PrintLog.log(TAG, currentToken + " onCallbackCurrentToken " + connectStateEnum.getCode()
                     + " " + (currentToken != null ? currentToken.getTokenContext() : ""));
             if (currentToken == null) {
                 return null;
@@ -76,8 +76,8 @@ public class BluetoothComms extends GattComms {
     }
 
     @Override
-    void onConnectionStateChange(BluetoothGatt gatt, ConnectState connectState) {
-        super.onConnectionStateChange(gatt, connectState);
+    void onConnectionStateChange(BluetoothGatt gatt, int status, ConnectStateEnum connectStateEnum) {
+        super.onConnectionStateChange(gatt, status, connectStateEnum);
         Token currentToken = onCallbackCurrentToken();
         if (currentToken == null) {
             return;
@@ -86,19 +86,19 @@ public class BluetoothComms extends GattComms {
             return;
         }
         mFunctionQueueHandler.dequeue();
-        IConnectCallback callback = (IConnectCallback) currentToken.getCallback();
+        ConnectObserver callback = (ConnectObserver) currentToken.getCallback();
         if (callback != null) {
-            if (connectState == ConnectState.CONNECT_SUCCESS) {
+            if (connectStateEnum == ConnectStateEnum.CONNECT_SUCCESS) {
                 //TODO 临时添加
                 bluetoothDeviceExtend.setConnected(true);
                 callback.onConnected(currentToken);
             } else {
-                if (connectState == ConnectState.CONNECT_DISCONNECT) {
+                if (connectStateEnum == ConnectStateEnum.CONNECT_DISCONNECT) {
                     //TODO 临时添加
                     bluetoothDeviceExtend.setConnected(false);
-                    callback.onDisconnected(currentToken, isActiveDisconnect);
+                    callback.onDisconnected(currentToken, status, isActiveDisconnect);
                 } else {
-                    callback.onConnectFailure(currentToken, connectState.getCode());
+                    callback.onConnectFailure(currentToken, connectStateEnum.getCode());
                 }
             }
         }
@@ -108,7 +108,7 @@ public class BluetoothComms extends GattComms {
         return connect(null);
     }
 
-    public Token connect(IConnectCallback callback) {
+    public Token connect(ConnectObserver callback) {
         return new FunctionToken("method-connect", this)
                 .callback(callback).method(new IMethod() {
                     @Override

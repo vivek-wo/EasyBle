@@ -1,13 +1,10 @@
 package com.vivek.wo.ble.demo
 
 import android.os.Bundle
-import android.support.v7.app.AppCompatActivity
 import android.widget.Toast
 import com.vivek.wo.ble.comms.BluetoothComms
 import com.vivek.wo.ble.comms.BluetoothDeviceExtend
-import com.vivek.wo.ble.comms.IConnectCallback
 import com.vivek.wo.ble.comms.Token
-import kotlinx.android.synthetic.main.activity_device.*
 
 class DeviceActivity : AppCompatActivity() {
     private lateinit var bluetoothComms: BluetoothComms
@@ -24,7 +21,7 @@ class DeviceActivity : AppCompatActivity() {
         device_txt_record.text = Hex.byteToHex(bluetoothDeviceExtend.scanRecord)
         bluetoothComms = BluetoothComms(this, bluetoothDeviceExtend)
         val token = bluetoothComms
-                .connect(object : IConnectCallback {
+                .connect(object {
                     override fun onConnected(token: Token?) {
                         runOnUiThread {
                             device_btn_connect.setText(getString(R.string.device_disconnect))

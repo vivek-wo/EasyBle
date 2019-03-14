@@ -19,6 +19,11 @@ public class IOTEasyBle {
     private BluetoothComms mBluetoothComms;
     private String deviceName;
     private String deviceAddress;
+    private String serviceUUIDString;
+    private String readableCharacteristicUUIDString;
+    private String writableCharacteristicUUIDString;
+    private String noticableCharacteristicUUIDString;
+    private String noticableDescriptorUUIDString;
 
     public IOTEasyBle(Builder builder) {
         mContext = builder.context;
@@ -27,10 +32,14 @@ public class IOTEasyBle {
         mBluetoothAdapter = mBluetoothManager.getAdapter();
         this.deviceName = builder.deviceName;
         this.deviceAddress = builder.deviceAddress;
+        this.serviceUUIDString = builder.serviceUUIDString;
+        this.readableCharacteristicUUIDString = builder.readableCharacteristicUUIDString;
+        this.writableCharacteristicUUIDString = builder.writableCharacteristicUUIDString;
+        this.noticableCharacteristicUUIDString = builder.noticableCharacteristicUUIDString;
+        this.noticableDescriptorUUIDString = builder.noticableDescriptorUUIDString;
     }
 
     public void write(String data) {
-
     }
 
 
@@ -65,8 +74,8 @@ public class IOTEasyBle {
         private String serviceUUIDString;
         private String readableCharacteristicUUIDString;
         private String writableCharacteristicUUIDString;
-        private String notifyOrIndicateCharacteristicUUIDString;
-        private String notifyOrIndicateDescriptorUUIDString;
+        private String noticableCharacteristicUUIDString;
+        private String noticableDescriptorUUIDString;
 
         public Builder(Context context) {
             this.context = context;
@@ -79,6 +88,31 @@ public class IOTEasyBle {
 
         public Builder setDeviceAddress(String deviceAddress) {
             this.deviceAddress = deviceAddress;
+            return this;
+        }
+
+        public Builder setServiceUUIDString(String serviceUUIDString) {
+            this.serviceUUIDString = serviceUUIDString;
+            return this;
+        }
+
+        public Builder setReadableCharacteristicUUIDString(String readableCharacteristicUUIDString) {
+            this.readableCharacteristicUUIDString = readableCharacteristicUUIDString;
+            return this;
+        }
+
+        public Builder setWritableCharacteristicUUIDString(String writableCharacteristicUUIDString) {
+            this.writableCharacteristicUUIDString = writableCharacteristicUUIDString;
+            return this;
+        }
+
+        public Builder setNoticableCharacteristicUUIDString(String noticableCharacteristicUUIDString) {
+            this.noticableCharacteristicUUIDString = noticableCharacteristicUUIDString;
+            return this;
+        }
+
+        public Builder setNoticableDescriptorUUIDString(String noticableDescriptorUUIDString) {
+            this.noticableDescriptorUUIDString = noticableDescriptorUUIDString;
             return this;
         }
     }

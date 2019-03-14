@@ -10,12 +10,46 @@ import android.content.Context;
 
 import java.lang.reflect.Method;
 
-public abstract class GattComms extends BluetoothGattCallback {
+abstract class GattComms extends BluetoothGattCallback {
     private static final String TAG = "GattComms";
     Context mContext;
-    protected BluetoothGatt mBluetoothGatt;
-    volatile ConnectState connectState = ConnectState.CONNECT_INIT;//连接状态
+    BluetoothGatt mBluetoothGatt;
+    volatile ConnectStateEnum mConnectState = ConnectStateEnum.STATE_NOTCONNECT;//连接状态
     boolean isActiveDisconnect = false;//是否主动断开连接
+
+    enum ConnectStateEnum {
+        /**
+         * 无连接
+         */
+        STATE_NOTCONNECT(-1),
+        /**
+         * 已连接
+         */
+        STATE_CONNECTED(BluetoothGatt.STATE_CONNECTED),
+        /**
+         * 正在连接
+         */
+        STATE_CONNECTING(BluetoothGatt.STATE_CONNECTING),
+        /**
+         * 已断开连接
+         */
+        STATE_DISCONNECTED(BluetoothGatt.STATE_DISCONNECTED),
+        /**
+         * 正在断开连接
+         */
+        STATE_DISCONNECTING(BluetoothGatt.STATE_DISCONNECTING);
+
+        private int connectState;
+
+        ConnectStateEnum(int connectState) {
+            this.connectState = connectState;
+        }
+
+        public int getConnectState() {
+            return connectState;
+        }
+    }
+
 
     protected GattComms(Context context) {
         mContext = context;
@@ -37,17 +71,13 @@ public abstract class GattComms extends BluetoothGattCallback {
         super.onConnectionStateChange(gatt, status, newState);
         if (newState == BluetoothGatt.STATE_CONNECTED) {
             gatt.discoverServices();
-            return;
         } else if (newState == BluetoothGatt.STATE_DISCONNECTED) {
-            if (status == BluetoothGatt.GATT_SUCCESS) {
-                connectState = ConnectState.CONNECT_DISCONNECT;
-            } else {
-                connectState = ConnectState.CONNECT_FAILURE;
-            }
+            mConnectState = ConnectStateEnum.STATE_DISCONNECTED;
         } else if (newState == BluetoothGatt.STATE_CONNECTING) {
-            connectState = ConnectState.CONNECT_PROCESS;
+            mConnectState = ConnectStateEnum.STATE_CONNECTING;
+        } else if (newState == BluetoothGatt.STATE_DISCONNECTING) {
+            mConnectState = ConnectStateEnum.STATE_DISCONNECTING;
         }
-        onConnectionStateChange(gatt, connectState);
     }
 
     /**
@@ -62,18 +92,13 @@ public abstract class GattComms extends BluetoothGattCallback {
     public void onServicesDiscovered(BluetoothGatt gatt, int status) {
         super.onServicesDiscovered(gatt, status);
         if (status == BluetoothGatt.GATT_SUCCESS) {
-            connectState = ConnectState.CONNECT_SUCCESS;
             mBluetoothGatt = gatt;
             isActiveDisconnect = false;
+            mConnectState = ConnectStateEnum.STATE_CONNECTED;
         } else {
             gatt.disconnect();
             gatt.close();
-            connectState = ConnectState.CONNECT_FAILURE;
         }
-        onConnectionStateChange(gatt, connectState);
-    }
-
-    void onConnectionStateChange(BluetoothGatt gatt, ConnectState connectState) {
     }
 
     /**
@@ -181,49 +206,57 @@ public abstract class GattComms extends BluetoothGattCallback {
         super.onMtuChanged(gatt, mtu, status);
     }
 
+    static void checkCharacteristicNULL(BluetoothGattCharacteristic characteristic) {
+        if (characteristic == null) {
+            throw new NullPointerException("BluetoothGattCharacteristic cannot be NULL");
+        }
+    }
+
     void connect(BluetoothDevice bluetoothDevice, boolean autoConnect) {
-        if (connectState == ConnectState.CONNECT_SUCCESS) {
-            return;
-        }
-        if (connectState == ConnectState.CONNECT_PROCESS) {
-            return;
-        }
-        connectState = ConnectState.CONNECT_PROCESS;
         bluetoothDevice.connectGatt(mContext, autoConnect, this);
     }
 
     boolean read(BluetoothGattCharacteristic characteristic) {
-        if (characteristic == null) {
-            throw new NullPointerException("BluetoothGattCharacteristic Cannot be NULL");
-        }
+        checkCharacteristicNULL(characteristic);
         return mBluetoothGatt.readCharacteristic(characteristic);
     }
 
     boolean write(BluetoothGattCharacteristic characteristic, byte[] data) {
-        if (characteristic == null) {
-            throw new NullPointerException("BluetoothGattCharacteristic Cannot be NULL");
-        }
-//        characteristic.setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT);
-//        characteristic.setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE);
+        checkCharacteristicNULL(characteristic);
         characteristic.setValue(data);
         return mBluetoothGatt.writeCharacteristic(characteristic);
     }
 
-    public boolean readRssi() {
+    /**
+     * @param characteristic
+     * @param data
+     * @param writeType      The write type to for this characteristic. Can be one
+     *                       of:
+     *                       {@link BluetoothGattCharacteristic#WRITE_TYPE_DEFAULT},
+     *                       {@link BluetoothGattCharacteristic#WRITE_TYPE_NO_RESPONSE} or
+     *                       {@link BluetoothGattCharacteristic#WRITE_TYPE_SIGNED}.
+     * @return
+     */
+    boolean write(BluetoothGattCharacteristic characteristic, byte[] data, int writeType) {
+        checkCharacteristicNULL(characteristic);
+        characteristic.setWriteType(writeType);
+        characteristic.setValue(data);
+        return mBluetoothGatt.writeCharacteristic(characteristic);
+    }
+
+    public boolean readRemoteRssi() {
         return mBluetoothGatt.readRemoteRssi();
     }
 
     boolean enable(BluetoothGattCharacteristic characteristic,
                    BluetoothGattDescriptor descriptor, boolean enable, boolean isIndication) {
-        if (characteristic == null) {
-            throw new NullPointerException("BluetoothGattCharacteristic Cannot be NULL");
-        }
-        if (descriptor == null) {
-            throw new NullPointerException("BluetoothGattDescriptor Cannot be NULL");
-        }
+        checkCharacteristicNULL(characteristic);
         boolean result = mBluetoothGatt.setCharacteristicNotification(characteristic, enable);
         if (!result) {
             return false;
+        }
+        if (descriptor == null) {
+            //设置为系统默认
         }
         if (!isIndication) {
             if ((characteristic.getProperties()
@@ -243,7 +276,7 @@ public abstract class GattComms extends BluetoothGattCallback {
             }
         }
         mBluetoothGatt.writeDescriptor(descriptor);
-        return result;
+        return true;
     }
 
     boolean refreshDeviceCache() {
@@ -263,7 +296,7 @@ public abstract class GattComms extends BluetoothGattCallback {
         return mBluetoothGatt;
     }
 
-    public void disconnect() {
+    void disconnect() {
         isActiveDisconnect = true;
         mBluetoothGatt.disconnect();
         mBluetoothGatt.close();
