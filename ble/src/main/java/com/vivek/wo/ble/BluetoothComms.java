@@ -1,4 +1,4 @@
-package com.vivek.wo.ble.comms;
+package com.vivek.wo.ble;
 
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
@@ -6,19 +6,20 @@ import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.content.Context;
 
-import com.vivek.wo.ble.PrintLog;
+import com.vivek.wo.ble.comms.CharacteristicHelper;
+import com.vivek.wo.ble.comms.FunctionToken;
+import com.vivek.wo.ble.comms.IMethod;
+import com.vivek.wo.ble.comms.Token;
 
 import java.util.UUID;
 
 public class BluetoothComms extends GattComms {
     private static final String TAG = "BluetoothComms";
-    private FunctionQueueHandler mFunctionQueueHandler;
     BluetoothDeviceExtend bluetoothDeviceExtend;
 
     public BluetoothComms(Context context, BluetoothDeviceExtend bluetoothDeviceExtend) {
         super(context);
         this.bluetoothDeviceExtend = bluetoothDeviceExtend;
-        mFunctionQueueHandler = FunctionQueueHandler.getMainQueueHandler();
     }
 
     /**
@@ -104,13 +105,25 @@ public class BluetoothComms extends GattComms {
         }
     }
 
+
+    @Override
+    public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
+        super.onConnectionStateChange(gatt, status, newState);
+    }
+
+    @Override
+    public void onServicesDiscovered(BluetoothGatt gatt, int status) {
+        super.onServicesDiscovered(gatt, status);
+    }
+
     public Token connect() {
         return connect(null);
     }
 
-    public Token connect(ConnectObserver callback) {
+    public Token connect(OnActionListener listener) {
         return new FunctionToken("method-connect", this)
-                .callback(callback).method(new IMethod() {
+                .callback(callback)
+                .method(new IMethod() {
                     @Override
                     public Object onMethod(Object[] args) {
                         connect(bluetoothDeviceExtend.getBluetoothDevice(), true);
@@ -142,7 +155,7 @@ public class BluetoothComms extends GattComms {
     }
 
     public Token read(String serviceUUID, String characteristicUUID,
-                      IReadCallback callback) {
+                      OnActionListener listener) {
         BluetoothGattService bluetoothGattService = getBluetoothGatt()
                 .getService(UUID.fromString(serviceUUID));
         BluetoothGattCharacteristic characteristic = CharacteristicHelper
@@ -182,7 +195,7 @@ public class BluetoothComms extends GattComms {
     }
 
     public Token write(String serviceUUID, String characteristicUUID, byte[] data,
-                       ITimeoutCallback callback) {
+                       OnActionListener listener) {
         BluetoothGattService bluetoothGattService = getBluetoothGatt()
                 .getService(UUID.fromString(serviceUUID));
         BluetoothGattCharacteristic characteristic = CharacteristicHelper
@@ -206,7 +219,7 @@ public class BluetoothComms extends GattComms {
     }
 
     public Token notify(String serviceUUID, String characteristicUUID, String descriptorUUID,
-                        boolean enable, boolean isIndication, ITimeoutCallback callback) {
+                        boolean enable, boolean isIndication, OnActionListener listener) {
         BluetoothGattService bluetoothGattService = getBluetoothGatt()
                 .getService(UUID.fromString(serviceUUID));
         BluetoothGattCharacteristic characteristic = CharacteristicHelper
@@ -230,26 +243,22 @@ public class BluetoothComms extends GattComms {
         super.onReadRemoteRssi(gatt, rssi, status);
     }
 
-    public Token rssi() {
-        return rssi(null);
+    public Token readRssi() {
+        return readRssi(null);
     }
 
-    public Token rssi(IRssiCallback callback) {
-        return new FunctionToken("method-rssi", this).callback(callback)
+    public Token readRssi(OnActionListener listener) {
+        return new FunctionToken("method-rssi", this)
+                .callback(callback)
                 .method(new IMethod() {
                     @Override
                     public Object onMethod(Object[] args) {
-                        return readRssi();
+                        return readRemoteRssi();
                     }
                 });
     }
 
-    @Override
-    public void disconnect() {
-        super.disconnect();
-    }
-
-    public void disconnect(ITimeoutCallback callback) {
+    public void disconnect(OnActionListener listener) {
 
     }
 

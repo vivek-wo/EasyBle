@@ -12,7 +12,7 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 
-import com.vivek.wo.ble.comms.BluetoothDeviceExtend;
+import com.vivek.wo.ble.BluetoothDeviceExtend;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;

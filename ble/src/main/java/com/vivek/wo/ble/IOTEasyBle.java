@@ -5,8 +5,6 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
 import android.content.Context;
 
-import com.vivek.wo.ble.comms.BluetoothComms;
-import com.vivek.wo.ble.comms.BluetoothDeviceExtend;
 import com.vivek.wo.ble.scan.IScanCallback;
 import com.vivek.wo.ble.scan.SingleFilterScanCallback;
 

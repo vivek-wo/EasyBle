@@ -2,8 +2,8 @@ package com.vivek.wo.ble.demo
 
 import android.os.Bundle
 import android.widget.Toast
-import com.vivek.wo.ble.comms.BluetoothComms
-import com.vivek.wo.ble.comms.BluetoothDeviceExtend
+import com.vivek.wo.ble.BluetoothComms
+import com.vivek.wo.ble.BluetoothDeviceExtend
 import com.vivek.wo.ble.comms.Token
 
 class DeviceActivity : AppCompatActivity() {

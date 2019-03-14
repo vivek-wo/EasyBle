@@ -1,5 +1,7 @@
 package com.vivek.wo.ble.comms;
 
+import com.vivek.wo.ble.BluetoothComms;
+
 public class FunctionToken extends Token {
     private BluetoothComms mBluetoothComms;
 

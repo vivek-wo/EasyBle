@@ -1,4 +1,4 @@
-package com.vivek.wo.ble.comms;
+package com.vivek.wo.ble;
 
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
@@ -9,11 +9,16 @@ import android.bluetooth.BluetoothProfile;
 import android.content.Context;
 
 import java.lang.reflect.Method;
+import java.util.UUID;
 
 abstract class GattComms extends BluetoothGattCallback {
+    //系统默认
+    public static final String CLIENT_CHARACTERISTIC_CONFIG =
+            "00002902-0000-1000-8000-00805f9b34fb";
     private static final String TAG = "GattComms";
     Context mContext;
     BluetoothGatt mBluetoothGatt;
+    //TODO 状态同步问题
     volatile ConnectStateEnum mConnectState = ConnectStateEnum.STATE_NOTCONNECT;//连接状态
     boolean isActiveDisconnect = false;//是否主动断开连接
 
@@ -212,15 +217,28 @@ abstract class GattComms extends BluetoothGattCallback {
         }
     }
 
+    /**
+     * @param bluetoothDevice
+     * @param autoConnect
+     */
     void connect(BluetoothDevice bluetoothDevice, boolean autoConnect) {
         bluetoothDevice.connectGatt(mContext, autoConnect, this);
     }
 
+    /**
+     * @param characteristic
+     * @return
+     */
     boolean read(BluetoothGattCharacteristic characteristic) {
         checkCharacteristicNULL(characteristic);
         return mBluetoothGatt.readCharacteristic(characteristic);
     }
 
+    /**
+     * @param characteristic
+     * @param data
+     * @return
+     */
     boolean write(BluetoothGattCharacteristic characteristic, byte[] data) {
         checkCharacteristicNULL(characteristic);
         characteristic.setValue(data);
@@ -244,10 +262,20 @@ abstract class GattComms extends BluetoothGattCallback {
         return mBluetoothGatt.writeCharacteristic(characteristic);
     }
 
+    /**
+     * @return
+     */
     public boolean readRemoteRssi() {
         return mBluetoothGatt.readRemoteRssi();
     }
 
+    /**
+     * @param characteristic
+     * @param descriptor
+     * @param enable
+     * @param isIndication
+     * @return
+     */
     boolean enable(BluetoothGattCharacteristic characteristic,
                    BluetoothGattDescriptor descriptor, boolean enable, boolean isIndication) {
         checkCharacteristicNULL(characteristic);
@@ -256,7 +284,7 @@ abstract class GattComms extends BluetoothGattCallback {
             return false;
         }
         if (descriptor == null) {
-            //设置为系统默认
+            descriptor = characteristic.getDescriptor(UUID.fromString(CLIENT_CHARACTERISTIC_CONFIG));
         }
         if (!isIndication) {
             if ((characteristic.getProperties()
@@ -279,6 +307,9 @@ abstract class GattComms extends BluetoothGattCallback {
         return true;
     }
 
+    /**
+     * @return
+     */
     boolean refreshDeviceCache() {
         try {
             final Method refresh = BluetoothGatt.class.getMethod("refresh");
@@ -292,12 +323,19 @@ abstract class GattComms extends BluetoothGattCallback {
         return false;
     }
 
+    /**
+     * @return
+     */
     public BluetoothGatt getBluetoothGatt() {
         return mBluetoothGatt;
     }
 
+    /**
+     * 断开关闭连接
+     */
     void disconnect() {
         isActiveDisconnect = true;
+        mConnectState = ConnectStateEnum.STATE_DISCONNECTING;
         mBluetoothGatt.disconnect();
         mBluetoothGatt.close();
         mBluetoothGatt = null;
