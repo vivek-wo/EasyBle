@@ -326,7 +326,7 @@ abstract class GattComms extends BluetoothGattCallback {
     /**
      * @return
      */
-    public BluetoothGatt getBluetoothGatt() {
+    BluetoothGatt getBluetoothGatt() {
         return mBluetoothGatt;
     }
 

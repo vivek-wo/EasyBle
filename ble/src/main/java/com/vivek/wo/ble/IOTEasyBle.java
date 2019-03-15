@@ -23,7 +23,7 @@ public class IOTEasyBle {
     private String noticableCharacteristicUUIDString;
     private String noticableDescriptorUUIDString;
 
-    public IOTEasyBle(Builder builder) {
+    IOTEasyBle(Builder builder) {
         mContext = builder.context;
         mBluetoothManager = (BluetoothManager) mContext
                 .getSystemService(Context.BLUETOOTH_SERVICE);
@@ -37,9 +37,17 @@ public class IOTEasyBle {
         this.noticableDescriptorUUIDString = builder.noticableDescriptorUUIDString;
     }
 
-    public void write(String data) {
+    public void connect() {
+
     }
 
+    public void notify(boolean enable) {
+
+    }
+
+    public void write(String data) {
+
+    }
 
     private void scanConnect() {
         new SingleFilterScanCallback(mBluetoothAdapter, new IScanCallback() {
@@ -112,6 +120,10 @@ public class IOTEasyBle {
         public Builder setNoticableDescriptorUUIDString(String noticableDescriptorUUIDString) {
             this.noticableDescriptorUUIDString = noticableDescriptorUUIDString;
             return this;
+        }
+
+        public IOTEasyBle build() {
+            return new IOTEasyBle(this);
         }
     }
 }

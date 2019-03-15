@@ -4,7 +4,6 @@ import android.os.Bundle
 import android.widget.Toast
 import com.vivek.wo.ble.BluetoothComms
 import com.vivek.wo.ble.BluetoothDeviceExtend
-import com.vivek.wo.ble.comms.Token
 
 class DeviceActivity : AppCompatActivity() {
     private lateinit var bluetoothComms: BluetoothComms
