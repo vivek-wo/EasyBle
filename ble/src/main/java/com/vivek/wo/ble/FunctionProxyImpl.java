@@ -5,9 +5,9 @@ import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 
 public abstract class FunctionProxyImpl implements FunctionProxy {
-    private BluetoothGattService gattService;
-    private BluetoothGattCharacteristic characteristic;
-    private BluetoothGattDescriptor descriptor;
+    BluetoothGattService gattService;
+    BluetoothGattCharacteristic characteristic;
+    BluetoothGattDescriptor descriptor;
     private OnActionListener listener;
     private int timeout;
 
@@ -24,8 +24,12 @@ public abstract class FunctionProxyImpl implements FunctionProxy {
     }
 
     @Override
-    public void callback(Object... args) {
-
+    public void callback(boolean result, BluetoothException exception, Object... args) {
+        if (result) {
+            this.listener.onSuccess(args);
+        } else {
+            this.listener.onFailure(exception);
+        }
     }
 
     @Override

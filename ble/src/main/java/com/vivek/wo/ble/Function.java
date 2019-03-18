@@ -5,6 +5,7 @@ public class Function {
     FunctionProxy target;
     int timeout;
     Object[] callbackArgs;
+    boolean completed = false;
 
     Function(FunctionProxy target, Object[] args) {
         this(target, args, 0);
@@ -16,11 +17,21 @@ public class Function {
         this.timeout = timeout;
     }
 
-    void invoke() {
-        this.target.invoke(args);
+    Object invoke() {
+        return this.target.invoke(args);
     }
 
     void callback() {
-        this.target.callback(callbackArgs);
+        BluetoothException exception = null;
+        boolean result = completed;
+        if (!completed) {
+            exception = new BluetoothException(
+                    BluetoothException.EXCEPTION_BLUETOOTH_FUNCTION_TIMEOUT);
+        }
+        this.target.callback(result, exception, args);
+    }
+
+    void callback(boolean result, BluetoothException exception, Object... args) {
+        this.target.callback(result, exception, args);
     }
 }

@@ -14,7 +14,7 @@ public interface FunctionProxy {
      *
      * @param args
      */
-    void callback(Object... args);
+    void callback(boolean result, BluetoothException exception, Object... args);
 
     /**
      * 设置执行方法回调监听

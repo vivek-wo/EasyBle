@@ -54,12 +54,20 @@ public class FunctionHandler extends Handler {
                         }
                     }
                 }
-                currentFunction.invoke();
+                Object result = currentFunction.invoke();
+                if (result instanceof Boolean) {
+                    if (!((Boolean) result)) {
+                        currentFunction.callback(false,
+                                new BluetoothException("Current Function Execute Failure."));
+                        continue;
+                    }
+                }
                 synchronized (this) {
                     try {
                         loackObject.wait(currentFunction.timeout);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
+                        currentFunction.completed = true;
                     }
                 }
                 currentFunction.callback();

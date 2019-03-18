@@ -42,7 +42,7 @@ public class BluetoothComms extends GattComms {
             @Override
             public Object invoke(Object... args) {
                 connect(bluetoothDeviceExtend.getBluetoothDevice(), false);
-                return null;
+                return true;
             }
         }.listen(listener);
     }
@@ -62,7 +62,12 @@ public class BluetoothComms extends GattComms {
         BluetoothGattService gattService = getBluetoothGattService(serviceUUIDString);
         BluetoothGattCharacteristic characteristic = getBluetoothGattCharacteristic(
                 gattService, characteristicUUIDString);
-        return null;
+        return new FunctionProxyImpl(gattService, characteristic, null) {
+            @Override
+            public Object invoke(Object... args) {
+                return read(this.characteristic);
+            }
+        }.listen(listener);
     }
 
     @Override
@@ -81,7 +86,12 @@ public class BluetoothComms extends GattComms {
         BluetoothGattService gattService = getBluetoothGattService(serviceUUIDString);
         BluetoothGattCharacteristic characteristic = getBluetoothGattCharacteristic(
                 gattService, characteristicUUIDString);
-        return null;
+        return new FunctionProxyImpl(gattService, characteristic, null) {
+            @Override
+            public Object invoke(Object... args) {
+                return null;
+            }
+        }.listen(listener);
     }
 
     public FunctionProxy notify(String serviceUUIDString, String characteristicUUIDString,
