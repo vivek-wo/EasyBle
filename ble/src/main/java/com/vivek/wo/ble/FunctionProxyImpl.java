@@ -1,15 +1,26 @@
 package com.vivek.wo.ble;
 
-public class FunctionProxyImpl implements FunctionProxy {
-    private Object[] args;
+import android.bluetooth.BluetoothGattCharacteristic;
+import android.bluetooth.BluetoothGattDescriptor;
+import android.bluetooth.BluetoothGattService;
+
+public abstract class FunctionProxyImpl implements FunctionProxy {
+    private BluetoothGattService gattService;
+    private BluetoothGattCharacteristic characteristic;
+    private BluetoothGattDescriptor descriptor;
+    private OnActionListener listener;
+    private int timeout;
 
     FunctionProxyImpl() {
 
     }
 
-    @Override
-    public Object invoke() {
-        return null;
+    public FunctionProxyImpl(BluetoothGattService gattService,
+                             BluetoothGattCharacteristic characteristic,
+                             BluetoothGattDescriptor descriptor) {
+        this.gattService = gattService;
+        this.characteristic = characteristic;
+        this.descriptor = descriptor;
     }
 
     @Override
@@ -18,8 +29,14 @@ public class FunctionProxyImpl implements FunctionProxy {
     }
 
     @Override
-    public void listen(OnActionListener listener) {
-
+    public FunctionProxy listen(OnActionListener listener) {
+        this.listener = listener;
+        return this;
     }
 
+    @Override
+    public FunctionProxy timeout(int timeout) {
+        this.timeout = timeout;
+        return this;
+    }
 }

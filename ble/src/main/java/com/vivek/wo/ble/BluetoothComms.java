@@ -38,7 +38,13 @@ public class BluetoothComms extends GattComms {
     }
 
     public FunctionProxy connect(OnActionListener listener) {
-        return null;
+        return new FunctionProxyImpl() {
+            @Override
+            public Object invoke(Object... args) {
+                connect(bluetoothDeviceExtend.getBluetoothDevice(), false);
+                return null;
+            }
+        }.listen(listener);
     }
 
     @Override

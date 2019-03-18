@@ -7,7 +7,7 @@ public interface FunctionProxy {
      *
      * @return
      */
-    Object invoke();
+    Object invoke(Object... args);
 
     /**
      * 执行方法回调
@@ -21,6 +21,14 @@ public interface FunctionProxy {
      *
      * @param listener
      */
-    void listen(OnActionListener listener);
+    FunctionProxy listen(OnActionListener listener);
+
+    /**
+     * 设置超时时间
+     *
+     * @param timeout
+     * @return
+     */
+    FunctionProxy timeout(int timeout);
 
 }

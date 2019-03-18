@@ -7,6 +7,8 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothProfile;
 import android.content.Context;
+import android.os.Build;
+import android.support.annotation.RequiresApi;
 
 import java.lang.reflect.Method;
 import java.util.UUID;
@@ -265,8 +267,13 @@ abstract class GattComms extends BluetoothGattCallback {
     /**
      * @return
      */
-    public boolean readRemoteRssi() {
+    boolean readRemoteRssi() {
         return mBluetoothGatt.readRemoteRssi();
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+    boolean setMTU(int mtu) {
+        return mBluetoothGatt.requestMtu(mtu);
     }
 
     /**
