@@ -5,9 +5,6 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
 import android.content.Context;
 
-import com.vivek.wo.ble.scan.IScanCallback;
-import com.vivek.wo.ble.scan.SingleFilterScanCallback;
-
 import java.util.List;
 
 public class IOTEasyBle {
@@ -15,6 +12,7 @@ public class IOTEasyBle {
     private BluetoothManager mBluetoothManager;
     private BluetoothAdapter mBluetoothAdapter;
     private BluetoothComms mBluetoothComms;
+    private MethodQueueHandler mMethodQueueHandler;
     private String deviceName;
     private String deviceAddress;
     private String serviceUUIDString;
@@ -28,6 +26,7 @@ public class IOTEasyBle {
         mBluetoothManager = (BluetoothManager) mContext
                 .getSystemService(Context.BLUETOOTH_SERVICE);
         mBluetoothAdapter = mBluetoothManager.getAdapter();
+        mMethodQueueHandler = new MethodQueueHandler();
         this.deviceName = builder.deviceName;
         this.deviceAddress = builder.deviceAddress;
         this.serviceUUIDString = builder.serviceUUIDString;
@@ -50,7 +49,7 @@ public class IOTEasyBle {
     }
 
     private void scanConnect() {
-        new SingleFilterScanCallback(mBluetoothAdapter, new IScanCallback() {
+        new SingleFilterScanCallback(mBluetoothAdapter, new OnScanCallback() {
             @Override
             public void onDeviceFound(BluetoothDeviceExtend bluetoothDeviceExtend, List<BluetoothDeviceExtend> result) {
                 mBluetoothComms = new BluetoothComms(mContext, bluetoothDeviceExtend);

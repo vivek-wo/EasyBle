@@ -1,37 +1,36 @@
 package com.vivek.wo.ble;
 
-public class Function {
+public class MethodObject {
     Object[] args;
-    FunctionProxy target;
+    MethodProxy target;
     int timeout;
+    int callbackCompleted = -1;//超时
     Object[] callbackArgs;
-    boolean completed = false;
 
-    Function(FunctionProxy target, Object[] args) {
+    MethodObject(MethodProxy target, Object[] args) {
         this(target, args, 0);
     }
 
-    Function(FunctionProxy target, Object[] args, int timeout) {
+    MethodObject(MethodProxy target, Object[] args, int timeout) {
         this.target = target;
         this.args = args;
         this.timeout = timeout;
     }
 
     Object invoke() {
-        return this.target.invoke(args);
+        return this.target.proxyInvoke(args);
     }
 
     void callback() {
         BluetoothException exception = null;
-        boolean result = completed;
-        if (!completed) {
+        if (callbackCompleted == -1) {
             exception = new BluetoothException(
                     BluetoothException.EXCEPTION_BLUETOOTH_FUNCTION_TIMEOUT);
         }
-        this.target.callback(result, exception, args);
+        this.target.callback(callbackCompleted, exception, args);
     }
 
-    void callback(boolean result, BluetoothException exception, Object... args) {
+    void callback(int result, BluetoothException exception, Object... args) {
         this.target.callback(result, exception, args);
     }
 }

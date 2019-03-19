@@ -1,10 +1,8 @@
-package com.vivek.wo.ble.scan;
-
-import com.vivek.wo.ble.BluetoothDeviceExtend;
+package com.vivek.wo.ble;
 
 import java.util.List;
 
-public interface IScanCallback {
+public interface OnScanCallback {
     /**
      * 发现设备
      *

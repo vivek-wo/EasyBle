@@ -1,4 +1,4 @@
-package com.vivek.wo.ble.scan;
+package com.vivek.wo.ble;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -11,11 +11,11 @@ public class SingleFilterScanCallback extends ScanCallback {
     private String deviceAddress;
     private String deviceName;
 
-    public SingleFilterScanCallback(Context context, IScanCallback scanCallback) {
+    public SingleFilterScanCallback(Context context, OnScanCallback scanCallback) {
         super(context, scanCallback);
     }
 
-    public SingleFilterScanCallback(BluetoothAdapter bluetoothAdapter, IScanCallback scanCallback) {
+    public SingleFilterScanCallback(BluetoothAdapter bluetoothAdapter, OnScanCallback scanCallback) {
         super(bluetoothAdapter, scanCallback);
     }
 

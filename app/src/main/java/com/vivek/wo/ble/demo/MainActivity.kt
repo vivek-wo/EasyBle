@@ -10,8 +10,6 @@ import android.view.ViewGroup
 import android.widget.Toast
 import com.vivek.wo.ble.BluetoothDeviceExtend
 import com.vivek.wo.ble.PrintLog
-import com.vivek.wo.ble.scan.IScanCallback
-import com.vivek.wo.ble.scan.ScanCallback
 
 class MainActivity : AppCompatActivity() {
     val PERMISSION_REQUESTCODE = 1001
@@ -52,7 +50,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun scanBLE() {
-        ScanCallback(this, object : IScanCallback {
+        ScanCallback(this, object {
             override fun onDeviceFound(bluetoothDeviceExtend: BluetoothDeviceExtend?,
                                        result: MutableList<BluetoothDeviceExtend>?) {
                 if (bluetoothDeviceExtend!!.deviceName == null) {

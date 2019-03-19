@@ -7,23 +7,23 @@ import android.os.Message;
 import java.util.ArrayList;
 import java.util.List;
 
-public class FunctionHandler extends Handler {
-    private List<Function> proxyFunctionList = new ArrayList<>();
+public class MethodQueueHandler extends Handler {
+    private List<MethodObject> methodObjectList = new ArrayList<>();
     private Object loackObject = new Object();
     private boolean handlerActive;
-    private Function currentFunction;
+    private MethodObject currentMethodObject;
 
-    public FunctionHandler() {
+    public MethodQueueHandler() {
         this(Looper.getMainLooper());
     }
 
-    public FunctionHandler(Looper looper) {
+    public MethodQueueHandler(Looper looper) {
         super(looper);
     }
 
-    public Object invoke(Function function) {
+    public Object invoke(MethodObject methodObject) {
         synchronized (this) {
-            proxyFunctionList.add(function);
+            methodObjectList.add(methodObject);
             if (!handlerActive) {
                 handlerActive = true;
                 sendMessage(obtainMessage());
@@ -32,9 +32,9 @@ public class FunctionHandler extends Handler {
         return null;
     }
 
-    public void callback(Object... args) {
+    public void callback(int status, Object... args) {
         synchronized (this) {
-            currentFunction.callbackArgs = args;
+            currentMethodObject.callbackArgs = args;
             loackObject.notifyAll();
         }
     }
@@ -44,33 +44,32 @@ public class FunctionHandler extends Handler {
         super.handleMessage(msg);
         try {
             while (true) {
-                currentFunction = proxyFunctionList.remove(0);
-                if (currentFunction == null) {
+                currentMethodObject = methodObjectList.remove(0);
+                if (currentMethodObject == null) {
                     synchronized (this) {
-                        currentFunction = proxyFunctionList.remove(0);
-                        if (proxyFunctionList == null) {
+                        currentMethodObject = methodObjectList.remove(0);
+                        if (methodObjectList == null) {
                             handlerActive = false;
                             return;
                         }
                     }
                 }
-                Object result = currentFunction.invoke();
+                Object result = currentMethodObject.invoke();
                 if (result instanceof Boolean) {
                     if (!((Boolean) result)) {
-                        currentFunction.callback(false,
-                                new BluetoothException("Current Function Execute Failure."));
+                        currentMethodObject.callback(BluetoothException.EXCEPTION_BLUETOOTH_EXECUTE_FAILURE,
+                                new BluetoothException("Current MethodObject Execute Failure."));
                         continue;
                     }
                 }
                 synchronized (this) {
                     try {
-                        loackObject.wait(currentFunction.timeout);
+                        loackObject.wait(currentMethodObject.timeout);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
-                        currentFunction.completed = true;
                     }
                 }
-                currentFunction.callback();
+                currentMethodObject.callback();
             }
         } finally {
             handlerActive = false;

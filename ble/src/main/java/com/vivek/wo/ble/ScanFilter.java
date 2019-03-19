@@ -1,8 +1,8 @@
-package com.vivek.wo.ble.scan;
+package com.vivek.wo.ble;
 
 import android.bluetooth.BluetoothDevice;
 
-public interface IScanFilter {
+public interface ScanFilter {
 
     /**
      * 过滤
