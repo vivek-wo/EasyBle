@@ -1,9 +1,11 @@
 package com.vivek.wo.ble.demo
 
 import android.os.Bundle
+import android.support.v7.app.AppCompatActivity
 import android.widget.Toast
 import com.vivek.wo.ble.BluetoothComms
 import com.vivek.wo.ble.BluetoothDeviceExtend
+import kotlinx.android.synthetic.main.activity_device.*
 
 class DeviceActivity : AppCompatActivity() {
     private lateinit var bluetoothComms: BluetoothComms

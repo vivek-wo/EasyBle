@@ -1,6 +1,7 @@
 package com.vivek.wo.ble;
 
 import android.os.Handler;
+import android.os.HandlerThread;
 import android.os.Looper;
 import android.os.Message;
 
@@ -14,7 +15,7 @@ public class MethodQueueHandler extends Handler {
     private MethodObject currentMethodObject;
 
     public MethodQueueHandler() {
-        this(Looper.getMainLooper());
+        this(new HandlerThread("MethodQueue-Looper").getLooper());
     }
 
     public MethodQueueHandler(Looper looper) {
@@ -34,6 +35,7 @@ public class MethodQueueHandler extends Handler {
 
     public void callback(int status, Object... args) {
         synchronized (this) {
+            currentMethodObject.callbackCompleted = status;
             currentMethodObject.callbackArgs = args;
             loackObject.notifyAll();
         }

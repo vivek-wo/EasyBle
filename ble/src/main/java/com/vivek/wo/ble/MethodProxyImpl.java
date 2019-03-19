@@ -11,7 +11,7 @@ public abstract class MethodProxyImpl implements MethodProxy {
     BluetoothGattDescriptor descriptor;
     private OnActionListener listener;
     private Object[] args;
-    private int timeout;
+    private long timeout;
 
     MethodProxyImpl() {
 
@@ -53,7 +53,7 @@ public abstract class MethodProxyImpl implements MethodProxy {
     }
 
     @Override
-    public MethodProxy timeout(int timeout) {
+    public MethodProxy timeout(long timeout) {
         this.timeout = timeout;
         return this;
     }

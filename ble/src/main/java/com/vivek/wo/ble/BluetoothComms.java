@@ -49,7 +49,7 @@ public class BluetoothComms extends GattComms {
                 connect(bluetoothDeviceExtend.getBluetoothDevice(), false);
                 return true;
             }
-        }.setMethodQueueHandler(methodQueueHandler).listen(listener).invoke();
+        }.setMethodQueueHandler(methodQueueHandler).listen(listener);
     }
 
     @Override
@@ -80,8 +80,7 @@ public class BluetoothComms extends GattComms {
         }
                 .setMethodQueueHandler(methodQueueHandler)
                 .setCharacteristic(characteristic)
-                .listen(listener)
-                .invoke();
+                .listen(listener);
     }
 
     @Override
@@ -110,8 +109,7 @@ public class BluetoothComms extends GattComms {
                 .setMethodQueueHandler(methodQueueHandler)
                 .setCharacteristic(characteristic)
                 .listen(listener)
-                .parameterArgs(data)
-                .invoke();
+                .parameterArgs(data);
     }
 
     @Override
@@ -144,8 +142,7 @@ public class BluetoothComms extends GattComms {
                 .setCharacteristic(characteristic)
                 .setDescriptor(descriptor)
                 .listen(listener)
-                .parameterArgs(enable, isIndication)
-                .invoke();
+                .parameterArgs(enable, isIndication);
     }
 
     @Override
@@ -164,7 +161,7 @@ public class BluetoothComms extends GattComms {
             public Object proxyInvoke(Object... args) {
                 return readRemoteRssi();
             }
-        }.listen(listener).invoke();
+        }.listen(listener);
     }
 
     public MethodProxy disconnect(OnActionListener listener) {
@@ -174,7 +171,7 @@ public class BluetoothComms extends GattComms {
                 disconnect();
                 return true;
             }
-        }.listen(listener).invoke();
+        }.listen(listener);
     }
 
     BluetoothGattService getBluetoothGattService(String serviceUUIDString) {

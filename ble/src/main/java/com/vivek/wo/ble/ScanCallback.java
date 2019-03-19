@@ -24,7 +24,9 @@ public class ScanCallback implements ScanFilter {
      */
     private static final int DEFAULT_SCANSECOND = 10;
     private BluetoothAdapter bluetoothAdapter;
-    private Handler handler = new Handler(Looper.myLooper());
+    /**
+     * 是否正在搜索
+     */
     private AtomicBoolean atomicBoolean = new AtomicBoolean(false);
     private BluetoothAdapter.LeScanCallback leScanCallback;
     /**
@@ -54,6 +56,8 @@ public class ScanCallback implements ScanFilter {
      * 蓝牙搜索列表
      */
     private List<BluetoothDeviceExtend> bluetoothDeviceExtendList;
+
+    private Handler handler = new Handler(Looper.myLooper());
 
     public ScanCallback(Context context, OnScanCallback scanCallback) {
         this(((BluetoothManager) context.getSystemService(Context.BLUETOOTH_SERVICE))
@@ -129,14 +133,16 @@ public class ScanCallback implements ScanFilter {
         }
     }
 
+    private Runnable scanTimeoutRunnable = new Runnable() {
+        @Override
+        public void run() {
+            timeout();
+        }
+    };
+
     private void setupTimeoutTask() {
         if (this.scanSecond > 0) {
-            handler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    timeout();
-                }
-            }, this.scanSecond * 1000);
+            handler.postDelayed(scanTimeoutRunnable, this.scanSecond * 1000);
         }
     }
 
@@ -175,7 +181,7 @@ public class ScanCallback implements ScanFilter {
      */
     public final void stop() {
         if (compareAndSet(true, false)) {
-            handler.removeCallbacksAndMessages(null);
+            handler.removeCallbacks(scanTimeoutRunnable);
             stopScan();
         }
     }
@@ -198,7 +204,7 @@ public class ScanCallback implements ScanFilter {
         return bluetoothDeviceExtendMap;
     }
 
-    void stopScan() {
+    private void stopScan() {
         if (LOLLIPOP()) {
             this.bluetoothAdapter.getBluetoothLeScanner().stopScan(leScannerScanCallback);
         } else {

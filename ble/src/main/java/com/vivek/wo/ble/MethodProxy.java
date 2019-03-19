@@ -26,10 +26,10 @@ public interface MethodProxy {
     /**
      * 设置超时时间
      *
-     * @param timeout
+     * @param timeout 毫秒
      * @return
      */
-    MethodProxy timeout(int timeout);
+    MethodProxy timeout(long timeout);
 
     /**
      * 设置请求参数
