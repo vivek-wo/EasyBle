@@ -7,12 +7,13 @@ import android.content.Context;
 
 import java.util.List;
 
-public class IOTEasyBle {
+public class IOTEasyBle implements BluetoothCommObserver {
     private Context mContext;
     private BluetoothManager mBluetoothManager;
     private BluetoothAdapter mBluetoothAdapter;
     private BluetoothComms mBluetoothComms;
     private MethodQueueHandler mMethodQueueHandler;
+    private BluetoothCommObserver mBluetoothCommObserver;
     private String deviceName;
     private String deviceAddress;
     private String serviceUUIDString;
@@ -36,40 +37,170 @@ public class IOTEasyBle {
         this.noticableDescriptorUUIDString = builder.noticableDescriptorUUIDString;
     }
 
-    public void connect() {
-
+    /**
+     * 设置蓝牙监听器
+     *
+     * @param observer
+     */
+    public void setBluetoothCommObserver(BluetoothCommObserver observer) {
+        mBluetoothCommObserver = observer;
     }
 
-    public void notify(boolean enable) {
-
+    /**
+     * 打开数据通知和关闭通知
+     *
+     * @param enable
+     * @param listener
+     * @throws BluetoothException
+     */
+    public void notify(boolean enable, OnActionListener listener) throws BluetoothException {
+        checkNotConnected();
+        mBluetoothComms.notify(serviceUUIDString, noticableCharacteristicUUIDString,
+                noticableDescriptorUUIDString, enable, false, listener).invoke();
     }
 
-    public void write(String data) {
-
+    /**
+     * 写数据
+     *
+     * @param data
+     * @return
+     * @throws BluetoothException
+     */
+    public MethodProxy write(byte[] data) throws BluetoothException {
+        checkNotConnected();
+        return mBluetoothComms.write(serviceUUIDString, writableCharacteristicUUIDString, data);
     }
 
-    private void scanConnect() {
-        new SingleFilterScanCallback(mBluetoothAdapter, new OnScanCallback() {
-            @Override
-            public void onDeviceFound(BluetoothDeviceExtend bluetoothDeviceExtend, List<BluetoothDeviceExtend> result) {
-                mBluetoothComms = new BluetoothComms(mContext, bluetoothDeviceExtend);
-            }
-
-            @Override
-            public void onScanFinish(List<BluetoothDeviceExtend> result) {
-            }
-
-            @Override
-            public void onScanTimeout() {
-            }
-        }).setDeviceAddress(this.deviceAddress).setDeviceName(this.deviceName).scan();
+    private void checkNotConnected() throws BluetoothException {
+        if (!mBluetoothComms.isConnected()) {
+            throw new BluetoothException(
+                    BluetoothException.BLUETOOTH_REMOTEDEVICE_NOICONNECTED,
+                    "Execute not allowed before connected.");
+        }
     }
 
-    private void directConnect() {
-        if (!BluetoothAdapter.checkBluetoothAddress(deviceAddress)) {
-            return;
+    /**
+     * 先搜索后连接
+     */
+    public void scanConnect() {
+        scanConnect(ScanCallback.DEFAULT_SCANSECOND);
+    }
+
+    /**
+     * 先搜索后连接
+     *
+     * @param scanSecond
+     */
+    public void scanConnect(int scanSecond) {
+        scanConnect(scanSecond, null);
+    }
+
+    /**
+     * 先搜索后连接
+     *
+     * @param scanSecond
+     * @param listener
+     */
+    public void scanConnect(int scanSecond, final OnActionListener listener) {
+        innerScanConnect(scanSecond, listener);
+    }
+
+    private void innerScanConnect(int scanSecond, final OnActionListener listener) {
+        new SingleFilterScanCallback(mBluetoothAdapter,
+                new OnScanCallback() {
+                    @Override
+                    public void onDeviceFound(BluetoothDeviceExtend bluetoothDeviceExtend, List<BluetoothDeviceExtend> result) {
+                        mBluetoothComms = new BluetoothComms(mContext, bluetoothDeviceExtend);
+                        mBluetoothComms.setMethodQueueHandler(mMethodQueueHandler);
+                        mBluetoothComms.connect(listener).invoke();
+                    }
+
+                    @Override
+                    public void onScanFinish(List<BluetoothDeviceExtend> result) {
+                    }
+
+                    @Override
+                    public void onScanTimeout() {
+                        if (listener != null) {
+                            BluetoothException exception = new BluetoothException(
+                                    BluetoothException.BLUETOOTH_SCAN_TIMEOUT,
+                                    "Scan timeout.");
+
+                            listener.onFailure(exception);
+                        }
+                    }
+                })
+                .setDeviceAddress(this.deviceAddress)
+                .setDeviceName(this.deviceName)
+                .scanSecond(scanSecond)
+                .scan();
+    }
+
+    /**
+     * 直接进行蓝牙连接
+     */
+    public void connect() throws BluetoothException {
+        connect(MethodObject.DEFAULT_TIMEOUT);
+    }
+
+    /**
+     * 直接进行蓝牙连接
+     *
+     * @param timeout
+     */
+    public void connect(long timeout) throws BluetoothException {
+        connect(timeout, null);
+    }
+
+    /**
+     * 直接进行蓝牙连接
+     *
+     * @param timeout
+     * @param listener
+     */
+    public void connect(long timeout, final OnActionListener listener) throws BluetoothException {
+        innerConnect(timeout, listener);
+    }
+
+    private void innerConnect(long timeout, final OnActionListener listener) throws BluetoothException {
+        if (checkBluetoothAddress(deviceAddress)) {
+            throw new BluetoothException(
+                    new IllegalArgumentException("Connect deviceAddress not a String Bluetooth address."));
         }
         BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(deviceAddress);
+        if (device == null) {
+            throw new BluetoothException(
+                    BluetoothException.BLUETOOTH_REMOTEDEVICE_NOIFOUND,
+                    "Get remoteDevice NULL");
+        }
+        mBluetoothComms = new BluetoothComms(mContext, new BluetoothDeviceExtend(device));
+        mBluetoothComms.setMethodQueueHandler(mMethodQueueHandler);
+        mBluetoothComms.connect(listener).timeout(timeout).invoke();
+    }
+
+    private boolean checkBluetoothAddress(String deviceAddress) {
+        return BluetoothAdapter.checkBluetoothAddress(deviceAddress);
+    }
+
+    @Override
+    public void connectComplete() {
+        if (mBluetoothCommObserver != null) {
+            mBluetoothCommObserver.connectComplete();
+        }
+    }
+
+    @Override
+    public void connectLost(Throwable throwable) {
+        if (mBluetoothCommObserver != null) {
+            mBluetoothCommObserver.connectLost(throwable);
+        }
+    }
+
+    @Override
+    public void remoteDataChanged(byte[] data) {
+        if (mBluetoothCommObserver != null) {
+            mBluetoothCommObserver.remoteDataChanged(data);
+        }
     }
 
     public static final class Builder {

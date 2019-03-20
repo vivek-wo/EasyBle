@@ -22,7 +22,7 @@ public class ScanCallback implements ScanFilter {
     /**
      * 默认搜索时间
      */
-    private static final int DEFAULT_SCANSECOND = 10;
+    static final int DEFAULT_SCANSECOND = 10;
     private BluetoothAdapter bluetoothAdapter;
     /**
      * 是否正在搜索

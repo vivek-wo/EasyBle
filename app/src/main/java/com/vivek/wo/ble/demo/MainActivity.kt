@@ -15,8 +15,11 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import com.vivek.wo.ble.BluetoothDeviceExtend
+import com.vivek.wo.ble.OnScanCallback
 import com.vivek.wo.ble.PrintLog
+import com.vivek.wo.ble.ScanCallback
 import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.item_list_main.view.*
 
 class MainActivity : AppCompatActivity() {
     val PERMISSION_REQUESTCODE = 1001
@@ -57,9 +60,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun scanBLE() {
-        ScanCallback(this, object {
-            override fun onDeviceFound(bluetoothDeviceExtend: BluetoothDeviceExtend?,
-                                       result: MutableList<BluetoothDeviceExtend>?) {
+        ScanCallback(this, object : OnScanCallback {
+            override fun onDeviceFound(bluetoothDeviceExtend: BluetoothDeviceExtend?, result: MutableList<BluetoothDeviceExtend>?) {
                 if (bluetoothDeviceExtend!!.deviceName == null) {
                     return
                 }
@@ -71,7 +73,6 @@ class MainActivity : AppCompatActivity() {
             }
 
             override fun onScanFinish(result: MutableList<BluetoothDeviceExtend>?) {
-
             }
 
             override fun onScanTimeout() {

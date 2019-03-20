@@ -59,8 +59,8 @@ public class MethodQueueHandler extends Handler {
                 Object result = currentMethodObject.invoke();
                 if (result instanceof Boolean) {
                     if (!((Boolean) result)) {
-                        currentMethodObject.callback(BluetoothException.EXCEPTION_BLUETOOTH_EXECUTE_FAILURE,
-                                new BluetoothException("Current MethodObject Execute Failure."));
+                        currentMethodObject.callback(BluetoothException.BLUETOOTH_EXECUTE_FAILURE,
+                                new BluetoothException("Current methodObject execute Failure."));
                         continue;
                     }
                 }

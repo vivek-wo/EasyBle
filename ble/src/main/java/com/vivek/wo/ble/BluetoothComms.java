@@ -6,6 +6,7 @@ import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.content.Context;
 
+import java.util.List;
 import java.util.UUID;
 
 public class BluetoothComms extends GattComms {
@@ -174,17 +175,31 @@ public class BluetoothComms extends GattComms {
         }.listen(listener);
     }
 
-    BluetoothGattService getBluetoothGattService(String serviceUUIDString) {
+    public List<BluetoothGattService> getGattServiceList() {
+        return getBluetoothGatt().getServices();
+    }
+
+    public List<BluetoothGattCharacteristic> getGattCharacteristicList(
+            BluetoothGattService gattService) {
+        return gattService.getCharacteristics();
+    }
+
+    public List<BluetoothGattDescriptor> getGattDescriptorList(
+            BluetoothGattCharacteristic gattCharacteristic) {
+        return gattCharacteristic.getDescriptors();
+    }
+
+    private BluetoothGattService getBluetoothGattService(String serviceUUIDString) {
         return getBluetoothGatt().getService(UUID.fromString(serviceUUIDString));
     }
 
-    BluetoothGattCharacteristic getBluetoothGattCharacteristic(BluetoothGattService service,
-                                                               String characteristicUUIDString) {
+    private BluetoothGattCharacteristic getBluetoothGattCharacteristic(
+            BluetoothGattService service, String characteristicUUIDString) {
         return service.getCharacteristic(UUID.fromString(characteristicUUIDString));
     }
 
-    BluetoothGattDescriptor getBluetoothGattDescriptor(BluetoothGattCharacteristic characteristic,
-                                                       String descriptorUUIDString) {
+    private BluetoothGattDescriptor getBluetoothGattDescriptor(
+            BluetoothGattCharacteristic characteristic, String descriptorUUIDString) {
         return characteristic.getDescriptor(UUID.fromString(descriptorUUIDString));
     }
 

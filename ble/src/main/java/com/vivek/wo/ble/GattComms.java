@@ -108,6 +108,10 @@ abstract class GattComms extends BluetoothGattCallback {
         }
     }
 
+    public boolean isConnected() {
+        return mConnectState == ConnectStateEnum.STATE_CONNECTED;
+    }
+
     /**
      * Callback reporting the result of a characteristic read operation.
      *

@@ -5,6 +5,8 @@ import android.support.v7.app.AppCompatActivity
 import android.widget.Toast
 import com.vivek.wo.ble.BluetoothComms
 import com.vivek.wo.ble.BluetoothDeviceExtend
+import com.vivek.wo.ble.BluetoothException
+import com.vivek.wo.ble.OnActionListener
 import kotlinx.android.synthetic.main.activity_device.*
 
 class DeviceActivity : AppCompatActivity() {
@@ -21,45 +23,33 @@ class DeviceActivity : AppCompatActivity() {
         device_btn_connect.isEnabled = false
         device_txt_record.text = Hex.byteToHex(bluetoothDeviceExtend.scanRecord)
         bluetoothComms = BluetoothComms(this, bluetoothDeviceExtend)
-        val token = bluetoothComms
-                .connect(object {
-                    override fun onConnected(token: Token?) {
-                        runOnUiThread {
-                            device_btn_connect.setText(getString(R.string.device_disconnect))
-                            device_btn_connect.isEnabled = true
-                        }
-                    }
+        bluetoothComms.connect(object : OnActionListener {
+            override fun onSuccess(vararg args: Any?) {
+                runOnUiThread {
+                    device_btn_connect.setText(getString(R.string.device_disconnect))
+                    device_btn_connect.isEnabled = true
+                }
+            }
 
-                    override fun onConnectFailure(token: Token?, status: Int) {
-                        runOnUiThread {
-                            Toast.makeText(this@DeviceActivity, "Connect failure",
-                                    Toast.LENGTH_SHORT).show()
-                            device_btn_connect.setText(getString(R.string.device_connect))
-                            device_btn_connect.isEnabled = true
-                        }
+            override fun onFailure(exception: BluetoothException?) {
+                if (exception?.reasonCode == BluetoothException.BLUETOOTH_FUNCTION_TIMEOUT) {
+                    runOnUiThread {
+                        Toast.makeText(this@DeviceActivity, "Connect Timeout",
+                                Toast.LENGTH_SHORT).show()
+                        device_btn_connect.setText(getString(R.string.device_connect))
+                        device_btn_connect.isEnabled = true
                     }
-
-                    override fun onTimeout(token: Token?) {
-                        runOnUiThread {
-                            Toast.makeText(this@DeviceActivity, "Connect Timeout",
-                                    Toast.LENGTH_SHORT).show()
-                            device_btn_connect.setText(getString(R.string.device_connect))
-                            device_btn_connect.isEnabled = true
-                        }
+                } else {
+                    runOnUiThread {
+                        Toast.makeText(this@DeviceActivity, "Connect failure",
+                                Toast.LENGTH_SHORT).show()
+                        device_btn_connect.setText(getString(R.string.device_connect))
+                        device_btn_connect.isEnabled = true
                     }
+                }
+            }
 
-                    override fun onDisconnected(token: Token?, isActiveDisconnect: Boolean) {
-                        runOnUiThread {
-                            Toast.makeText(this@DeviceActivity, "onDisconnected",
-                                    Toast.LENGTH_SHORT).show()
-                            device_btn_connect.setText(getString(R.string.device_connect))
-                            device_btn_connect.isEnabled = true
-                        }
-                    }
-
-                })
-                .timeout(2 * 1000)
-                .execute()
+        }).invoke()
     }
 
 

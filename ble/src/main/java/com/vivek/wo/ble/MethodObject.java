@@ -1,7 +1,7 @@
 package com.vivek.wo.ble;
 
 public class MethodObject {
-    private static final long DEFAULT_TIMEOUT = 15 * 1000;
+    static final long DEFAULT_TIMEOUT = 15 * 1000;
     Object[] args;
     MethodProxy target;
     long timeout = DEFAULT_TIMEOUT;//默认15秒超时
@@ -26,7 +26,7 @@ public class MethodObject {
         BluetoothException exception = null;
         if (callbackCompleted == -1) {
             exception = new BluetoothException(
-                    BluetoothException.EXCEPTION_BLUETOOTH_FUNCTION_TIMEOUT);
+                    BluetoothException.BLUETOOTH_FUNCTION_TIMEOUT);
         }
         this.target.callback(callbackCompleted, exception, args);
     }
