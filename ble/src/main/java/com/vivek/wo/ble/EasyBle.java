@@ -19,7 +19,9 @@ public class EasyBle {
     private Context mContext;
     private BluetoothManager mBluetoothManager;
     private BluetoothAdapter mBluetoothAdapter;
+    private BluetoothStateObserver mStateObserver;
     private BroadcastReceiver mBluetoothStateChangedReceiver;
+    private ScanCallback mScanCallback;
 
     private EasyBle() {
     }
@@ -35,7 +37,8 @@ public class EasyBle {
     /**
      * 设置蓝牙状态监听器
      */
-    public void setBluetoothStateChangedObserver() {
+    public void setBluetoothStateObserver(BluetoothStateObserver stateObserver) {
+        mStateObserver = stateObserver;
     }
 
     /**
@@ -83,6 +86,9 @@ public class EasyBle {
                 if (intent.getAction().equals(BluetoothAdapter.ACTION_STATE_CHANGED)) {
                     int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE,
                             BluetoothAdapter.ERROR);
+                    if (mStateObserver != null) {
+                        mStateObserver.onStateChanged(state);
+                    }
                 }
             }
         };
@@ -124,27 +130,50 @@ public class EasyBle {
      * @param activity    上下文
      * @param requestCode
      */
-    public int enableBluetooth(Activity activity, int requestCode) throws BluetoothException {
-        if (activity != null) {
-            Intent intent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
-            activity.startActivityForResult(intent, requestCode);
-            return 0;
-        } else {
+    public void enableBluetooth(Activity activity, int requestCode) throws BluetoothException {
+        if (activity == null) {
             throw new BluetoothException(new NullPointerException("Activity cannot be NULL."));
+        }
+        Intent intent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+        activity.startActivityForResult(intent, requestCode);
+    }
+
+    private void checkBluetoothAdapterNULL() throws BluetoothException {
+        if (mBluetoothAdapter == null) {
+            throw new BluetoothException(new NullPointerException("BluetoothAdapter NULL"));
         }
     }
 
     /**
      * 蓝牙搜索
+     *
+     * @param callback
+     * @throws BluetoothException
      */
-    public void scan(OnScanCallback callback) {
-
+    public void scan(OnScanCallback callback) throws BluetoothException {
+        checkBluetoothAdapterNULL();
+        if (mScanCallback == null) {
+            mScanCallback = new ScanCallback(mBluetoothAdapter, callback);
+        }
+        mScanCallback.scan();
     }
 
     /**
      * 停止搜索
      */
     public void stopScan() {
+        if (mScanCallback != null) {
+            mScanCallback.stop();
+        }
+    }
+
+    /**
+     * 是否正在搜索
+     *
+     * @return
+     */
+    public boolean isScan() {
+        return mScanCallback != null && mScanCallback.isScan();
     }
 
     /**
@@ -152,6 +181,7 @@ public class EasyBle {
      */
     public void connect(BluetoothDeviceExtend bluetoothDeviceExtend,
                         OnActionListener listener) {
+        
     }
 
     /**

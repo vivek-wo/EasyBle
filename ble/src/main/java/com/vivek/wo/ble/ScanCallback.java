@@ -124,6 +124,7 @@ public class ScanCallback implements ScanFilter {
      */
     public final void scan() {
         if (compareAndSet(false, true)) {
+            clearCacheCollectionData();
             if (LOLLIPOP()) {
                 leScannerScan();
             } else {
@@ -131,6 +132,11 @@ public class ScanCallback implements ScanFilter {
             }
             setupTimeoutTask();
         }
+    }
+
+    private void clearCacheCollectionData() {
+        bluetoothDeviceExtendMap.clear();
+        bluetoothDeviceExtendList.clear();
     }
 
     private Runnable scanTimeoutRunnable = new Runnable() {
