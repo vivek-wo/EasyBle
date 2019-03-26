@@ -2,6 +2,7 @@ package com.vivek.wo.ble;
 
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
@@ -12,6 +13,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -19,11 +21,15 @@ public class EasyBle {
     private Context mContext;
     private BluetoothManager mBluetoothManager;
     private BluetoothAdapter mBluetoothAdapter;
+    private MethodQueueHandler mMethodQueueHandler;
     private BluetoothStateObserver mStateObserver;
     private BroadcastReceiver mBluetoothStateChangedReceiver;
     private ScanCallback mScanCallback;
 
+    private Map<String, BluetoothComms> mConnectedDeviceExtendMap = new HashMap<>();
+
     private EasyBle() {
+        mMethodQueueHandler = new MethodQueueHandler();
     }
 
     private static class EasyBleHolder {
@@ -181,25 +187,60 @@ public class EasyBle {
      */
     public void connect(BluetoothDeviceExtend bluetoothDeviceExtend,
                         OnActionListener listener) {
-        
+        BluetoothComms comms = new BluetoothComms(mContext, bluetoothDeviceExtend);
+        comms.setMethodQueueHandler(mMethodQueueHandler);
+        comms.connect(listener).invoke();
     }
 
     /**
      * 蓝牙MAC地址直接连接
      */
-    public void connect(String deviceAddress, OnActionListener listener) {
+    public void connect(String deviceAddress, OnActionListener listener) throws BluetoothException {
+        CommonMethod.checkBluetoothAddress(deviceAddress);
+        BluetoothDevice device = CommonMethod.getRemoteDevice(mBluetoothAdapter, deviceAddress);
+        BluetoothComms comms = new BluetoothComms(mContext, new BluetoothDeviceExtend(device));
+        comms.setMethodQueueHandler(mMethodQueueHandler);
+        comms.connect(listener).invoke();
     }
 
     /**
      * 蓝牙MAC地址，先搜索后连接
      */
-    public void scanConnect(String deviceAddress, OnActionListener listener) {
+    public void scanConnect(String deviceAddress, final OnActionListener listener) {
+        new SingleFilterScanCallback(mBluetoothAdapter,
+                new OnScanCallback() {
+                    @Override
+                    public void onDeviceFound(BluetoothDeviceExtend bluetoothDeviceExtend, List<BluetoothDeviceExtend> result) {
+                        BluetoothComms comms = new BluetoothComms(mContext, bluetoothDeviceExtend);
+                        comms.setMethodQueueHandler(mMethodQueueHandler);
+                        comms.connect(listener).invoke();
+                    }
+
+                    @Override
+                    public void onScanFinish(List<BluetoothDeviceExtend> result) {
+                    }
+
+                    @Override
+                    public void onScanTimeout() {
+                        if (listener != null) {
+                            BluetoothException exception = new BluetoothException(
+                                    BluetoothException.BLUETOOTH_SCAN_TIMEOUT,
+                                    "Scan timeout.");
+                            listener.onFailure(exception);
+                        }
+                    }
+                })
+                .setDeviceAddress(deviceAddress)
+                .scan();
     }
 
     /**
      * 根据蓝牙MAC地址断开当前连接
      */
-    public void disconnect(String deviceAddress) {
+    public void disconnect(String deviceAddress) throws BluetoothException {
+        BluetoothComms comms = mConnectedDeviceExtendMap.get(deviceAddress);
+        CommonMethod.checkNotConnected(comms);
+        comms.disconnect();
     }
 
     /**
@@ -212,34 +253,45 @@ public class EasyBle {
      * 读取数据
      */
     public void read(String deviceAddress, String serviceUUIDString,
-                     String characteristicUUIDString, OnActionListener listener) {
+                     String characteristicUUIDString, OnActionListener listener)
+            throws BluetoothException {
+        BluetoothComms comms = mConnectedDeviceExtendMap.get(deviceAddress);
+        CommonMethod.checkNotConnected(comms);
+        comms.read(serviceUUIDString, characteristicUUIDString, listener).invoke();
     }
 
     /**
      * 写数据
      */
     public void write(String deviceAddress, String serviceUUIDString,
-                      String characteristicUUIDString, byte[] data, OnActionListener listener) {
-    }
-
-    /**
-     * 写数据
-     */
-    public void writeNoResp(String deviceAddress, String serviceUUIDString,
-                            String characteristicUUIDString, byte[] data, OnActionListener listener) {
+                      String characteristicUUIDString, byte[] data, OnActionListener listener)
+            throws BluetoothException {
+        BluetoothComms comms = mConnectedDeviceExtendMap.get(deviceAddress);
+        CommonMethod.checkNotConnected(comms);
+        comms.write(serviceUUIDString, characteristicUUIDString, data, listener).invoke();
     }
 
     /**
      * 打开数据通知和关闭通知
      */
     public void notify(String deviceAddress, String serviceUUIDString,
-                       String characteristicUUIDString, boolean enable, OnActionListener listener) {
+                       String characteristicUUIDString, String descriptorUUIDString,
+                       boolean enable, boolean isIndication, OnActionListener listener)
+            throws BluetoothException {
+        BluetoothComms comms = mConnectedDeviceExtendMap.get(deviceAddress);
+        CommonMethod.checkNotConnected(comms);
+        comms.notify(serviceUUIDString, characteristicUUIDString, descriptorUUIDString,
+                enable, isIndication, listener).invoke();
     }
 
     /**
      * 读取RSSI
      */
-    public void readRssi(String deviceAddress, OnActionListener listener) {
+    public void readRssi(String deviceAddress, OnActionListener listener)
+            throws BluetoothException {
+        BluetoothComms comms = mConnectedDeviceExtendMap.get(deviceAddress);
+        CommonMethod.checkNotConnected(comms);
+        comms.rssi(listener).invoke();
     }
 
     /**
@@ -248,11 +300,22 @@ public class EasyBle {
      * @return 蓝牙设备集合
      */
     public List<BluetoothDeviceExtend> getLastScanFinishedDeviceList() {
+        if (mScanCallback != null) {
+            return mScanCallback.getLastScanFinishedDeviceList();
+        }
         return null;
     }
 
 
+    /**
+     * 获取最后一次扫描的集合
+     *
+     * @return
+     */
     public Map<String, BluetoothDeviceExtend> getLastScanFinishedDeviceMap() {
+        if (mScanCallback != null) {
+            return mScanCallback.getLastScanFinishedDeviceMap();
+        }
         return null;
     }
 
@@ -269,6 +332,7 @@ public class EasyBle {
      * 设置蓝牙监听
      */
     public void setBluetoothCommObserver(String deviceAddress) {
+        BluetoothComms comms = mConnectedDeviceExtendMap.get(deviceAddress);
     }
 
     /**
@@ -277,7 +341,8 @@ public class EasyBle {
      * @return true 已连接
      */
     public boolean isConnected(String deviceAddress) {
-        return false;
+        BluetoothComms comms = mConnectedDeviceExtendMap.get(deviceAddress);
+        return comms != null && comms.isConnected();
     }
 
     /**
@@ -286,13 +351,15 @@ public class EasyBle {
      * @return
      */
     public BluetoothDeviceExtend getConnectedBluetoothDeviceExtend(String deviceAddress) {
-        return null;
+        BluetoothComms comms = mConnectedDeviceExtendMap.get(deviceAddress);
+        return comms != null && comms.isConnected() ? comms.getBluetoothDeviceExtend() : null;
     }
 
     /**
      * 检查当前蓝牙状态 ,检查结果在监听器中返回
      */
     public void checkState() {
+
     }
 
     /**
@@ -300,7 +367,9 @@ public class EasyBle {
      *
      * @return
      */
-    public List<BluetoothGattService> getGattServiceList(String deviceAddress) {
+    public List<BluetoothGattService> getGattServiceList(String deviceAddress) throws BluetoothException {
+        BluetoothComms comms = mConnectedDeviceExtendMap.get(deviceAddress);
+        CommonMethod.checkNotConnected(comms);
         return null;
     }
 
@@ -310,7 +379,9 @@ public class EasyBle {
      * @return
      */
     public List<BluetoothGattCharacteristic> getGattCharacteristicList(
-            String deviceAddress, BluetoothGattService gattService) {
+            String deviceAddress, BluetoothGattService gattService) throws BluetoothException {
+        BluetoothComms comms = mConnectedDeviceExtendMap.get(deviceAddress);
+        CommonMethod.checkNotConnected(comms);
         return null;
     }
 
@@ -320,7 +391,9 @@ public class EasyBle {
      * @return
      */
     public List<BluetoothGattDescriptor> getGattDescriptorList(
-            String deviceAddress, BluetoothGattCharacteristic gattCharacteristic) {
+            String deviceAddress, BluetoothGattCharacteristic gattCharacteristic) throws BluetoothException {
+        BluetoothComms comms = mConnectedDeviceExtendMap.get(deviceAddress);
+        CommonMethod.checkNotConnected(comms);
         return null;
     }
 

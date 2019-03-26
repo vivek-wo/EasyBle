@@ -29,6 +29,10 @@ public class BluetoothComms extends GattComms {
         this.methodQueueHandler = handler;
     }
 
+    public BluetoothDeviceExtend getBluetoothDeviceExtend() {
+        return bluetoothDeviceExtend;
+    }
+
     @Override
     public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
         super.onConnectionStateChange(gatt, status, newState);

@@ -54,7 +54,7 @@ public class IOTEasyBle implements BluetoothCommObserver {
      * @throws BluetoothException
      */
     public void notify(boolean enable, OnActionListener listener) throws BluetoothException {
-        checkNotConnected();
+        CommonMethod.checkNotConnected(mBluetoothComms);
         mBluetoothComms.notify(serviceUUIDString, noticableCharacteristicUUIDString,
                 noticableDescriptorUUIDString, enable, false, listener).invoke();
     }
@@ -67,16 +67,8 @@ public class IOTEasyBle implements BluetoothCommObserver {
      * @throws BluetoothException
      */
     public MethodProxy write(byte[] data) throws BluetoothException {
-        checkNotConnected();
+        CommonMethod.checkNotConnected(mBluetoothComms);
         return mBluetoothComms.write(serviceUUIDString, writableCharacteristicUUIDString, data);
-    }
-
-    private void checkNotConnected() throws BluetoothException {
-        if (!mBluetoothComms.isConnected()) {
-            throw new BluetoothException(
-                    BluetoothException.BLUETOOTH_REMOTEDEVICE_NOICONNECTED,
-                    "Execute not allowed before connected.");
-        }
     }
 
     /**
@@ -163,23 +155,11 @@ public class IOTEasyBle implements BluetoothCommObserver {
     }
 
     private void innerConnect(long timeout, final OnActionListener listener) throws BluetoothException {
-        if (checkBluetoothAddress(deviceAddress)) {
-            throw new BluetoothException(
-                    new IllegalArgumentException("Connect deviceAddress not a String Bluetooth address."));
-        }
-        BluetoothDevice device = mBluetoothAdapter.getRemoteDevice(deviceAddress);
-        if (device == null) {
-            throw new BluetoothException(
-                    BluetoothException.BLUETOOTH_REMOTEDEVICE_NOIFOUND,
-                    "Get remoteDevice NULL");
-        }
+        CommonMethod.checkBluetoothAddress(deviceAddress);
+        BluetoothDevice device = CommonMethod.getRemoteDevice(mBluetoothAdapter, deviceAddress);
         mBluetoothComms = new BluetoothComms(mContext, new BluetoothDeviceExtend(device));
         mBluetoothComms.setMethodQueueHandler(mMethodQueueHandler);
         mBluetoothComms.connect(listener).timeout(timeout).invoke();
-    }
-
-    private boolean checkBluetoothAddress(String deviceAddress) {
-        return BluetoothAdapter.checkBluetoothAddress(deviceAddress);
     }
 
     @Override
