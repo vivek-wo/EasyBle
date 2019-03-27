@@ -25,6 +25,10 @@ public class BluetoothComms extends GattComms {
         this.bluetoothCommObserver = observer;
     }
 
+    public void setBluetoothCommObserver(BluetoothCommObserver bluetoothCommObserver) {
+        this.bluetoothCommObserver = bluetoothCommObserver;
+    }
+
     public void setMethodQueueHandler(MethodQueueHandler handler) {
         this.methodQueueHandler = handler;
     }

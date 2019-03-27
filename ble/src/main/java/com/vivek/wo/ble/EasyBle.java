@@ -13,7 +13,9 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -247,6 +249,10 @@ public class EasyBle {
      * 断开所有连接
      */
     public void disconnectAll() {
+        Iterator<BluetoothComms> iterator = mConnectedDeviceExtendMap.values().iterator();
+        while (iterator.hasNext()) {
+            iterator.next().disconnect();
+        }
     }
 
     /**
@@ -324,15 +330,18 @@ public class EasyBle {
      *
      * @return 蓝牙设备集合
      */
-    public List<BluetoothDeviceExtend> getConnectedDeviceList() {
-        return null;
+    public List<BluetoothComms> getConnectedDeviceList() {
+        return new ArrayList<>(mConnectedDeviceExtendMap.values());
     }
 
     /**
      * 设置蓝牙监听
      */
-    public void setBluetoothCommObserver(String deviceAddress) {
+    public void setBluetoothCommObserver(String deviceAddress, BluetoothCommObserver commObserver)
+            throws BluetoothException {
         BluetoothComms comms = mConnectedDeviceExtendMap.get(deviceAddress);
+        CommonMethod.checkNotConnected(comms);
+        comms.setBluetoothCommObserver(commObserver);
     }
 
     /**
@@ -359,7 +368,7 @@ public class EasyBle {
      * 检查当前蓝牙状态 ,检查结果在监听器中返回
      */
     public void checkState() {
-
+        mBluetoothAdapter.getState();
     }
 
     /**
