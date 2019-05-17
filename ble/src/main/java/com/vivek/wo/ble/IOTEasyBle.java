@@ -5,6 +5,13 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
 import android.content.Context;
 
+import com.vivek.wo.ble.internal.BluetoothCommObserver;
+import com.vivek.wo.ble.internal.BluetoothComms;
+import com.vivek.wo.ble.internal.BluetoothDeviceExtend;
+import com.vivek.wo.ble.internal.BluetoothException;
+import com.vivek.wo.ble.internal.CommonMethod;
+import com.vivek.wo.ble.internal.OnActionListener;
+
 import java.util.List;
 
 public class IOTEasyBle implements BluetoothCommObserver {

@@ -1,4 +1,4 @@
-package com.vivek.wo.ble;
+package com.vivek.wo.ble.internal;
 
 import android.bluetooth.BluetoothDevice;
 import android.os.Parcel;
@@ -19,17 +19,6 @@ public class BluetoothDeviceExtend implements Parcelable {
     private BluetoothDevice bluetoothDevice;
     private int rssi;
     private byte[] scanRecord;
-
-    // TODO临时添加
-    private boolean isConnected = false;
-
-    public boolean isConnected() {
-        return isConnected;
-    }
-
-    public void setConnected(boolean connected) {
-        isConnected = connected;
-    }
 
     public BluetoothDeviceExtend(BluetoothDevice bluetoothDevice, int rssi, byte[] scanRecord) {
         this.bluetoothDevice = bluetoothDevice;

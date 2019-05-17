@@ -14,10 +14,10 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
-import com.vivek.wo.ble.BluetoothDeviceExtend
 import com.vivek.wo.ble.OnScanCallback
 import com.vivek.wo.ble.PrintLog
 import com.vivek.wo.ble.ScanCallback
+import com.vivek.wo.ble.internal.BluetoothDeviceExtend
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.item_list_main.view.*
 

@@ -1,4 +1,4 @@
-package com.vivek.wo.ble;
+package com.vivek.wo.ble.internal;
 
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
@@ -57,7 +57,6 @@ abstract class GattComms extends BluetoothGattCallback {
         }
     }
 
-
     protected GattComms(Context context) {
         mContext = context;
     }
@@ -108,6 +107,11 @@ abstract class GattComms extends BluetoothGattCallback {
         }
     }
 
+    /**
+     * 蓝牙设备是否连接（并且发现服务）
+     *
+     * @return
+     */
     public boolean isConnected() {
         return mConnectState == ConnectStateEnum.STATE_CONNECTED;
     }
@@ -217,34 +221,21 @@ abstract class GattComms extends BluetoothGattCallback {
         super.onMtuChanged(gatt, mtu, status);
     }
 
-    static void checkCharacteristicNULL(BluetoothGattCharacteristic characteristic) {
+    private static void checkCharacteristicNULL(BluetoothGattCharacteristic characteristic) {
         if (characteristic == null) {
             throw new NullPointerException("BluetoothGattCharacteristic cannot be NULL");
         }
     }
 
-    /**
-     * @param bluetoothDevice
-     * @param autoConnect
-     */
     void connect(BluetoothDevice bluetoothDevice, boolean autoConnect) {
         bluetoothDevice.connectGatt(mContext, autoConnect, this);
     }
 
-    /**
-     * @param characteristic
-     * @return
-     */
     boolean read(BluetoothGattCharacteristic characteristic) {
         checkCharacteristicNULL(characteristic);
         return mBluetoothGatt.readCharacteristic(characteristic);
     }
 
-    /**
-     * @param characteristic
-     * @param data
-     * @return
-     */
     boolean write(BluetoothGattCharacteristic characteristic, byte[] data) {
         checkCharacteristicNULL(characteristic);
         characteristic.setValue(data);
@@ -268,9 +259,6 @@ abstract class GattComms extends BluetoothGattCallback {
         return mBluetoothGatt.writeCharacteristic(characteristic);
     }
 
-    /**
-     * @return
-     */
     boolean readRemoteRssi() {
         return mBluetoothGatt.readRemoteRssi();
     }
@@ -280,13 +268,6 @@ abstract class GattComms extends BluetoothGattCallback {
         return mBluetoothGatt.requestMtu(mtu);
     }
 
-    /**
-     * @param characteristic
-     * @param descriptor
-     * @param enable
-     * @param isIndication
-     * @return
-     */
     boolean enable(BluetoothGattCharacteristic characteristic,
                    BluetoothGattDescriptor descriptor, boolean enable, boolean isIndication) {
         checkCharacteristicNULL(characteristic);
@@ -318,9 +299,6 @@ abstract class GattComms extends BluetoothGattCallback {
         return true;
     }
 
-    /**
-     * @return
-     */
     boolean refreshDeviceCache() {
         try {
             final Method refresh = BluetoothGatt.class.getMethod("refresh");
@@ -334,16 +312,10 @@ abstract class GattComms extends BluetoothGattCallback {
         return false;
     }
 
-    /**
-     * @return
-     */
     BluetoothGatt getBluetoothGatt() {
         return mBluetoothGatt;
     }
 
-    /**
-     * 断开关闭连接
-     */
     void disconnect() {
         isActiveDisconnect = true;
         mConnectState = ConnectStateEnum.STATE_DISCONNECTING;

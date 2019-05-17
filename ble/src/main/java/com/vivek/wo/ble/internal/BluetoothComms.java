@@ -1,10 +1,14 @@
-package com.vivek.wo.ble;
+package com.vivek.wo.ble.internal;
 
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.content.Context;
+
+import com.vivek.wo.ble.MethodProxy;
+import com.vivek.wo.ble.MethodProxyImpl;
+import com.vivek.wo.ble.MethodQueueHandler;
 
 import java.util.List;
 import java.util.UUID;

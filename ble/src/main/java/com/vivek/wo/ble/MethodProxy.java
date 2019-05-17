@@ -1,13 +1,9 @@
 package com.vivek.wo.ble;
 
-public interface MethodProxy {
+import com.vivek.wo.ble.internal.BluetoothException;
+import com.vivek.wo.ble.internal.OnActionListener;
 
-    /**
-     * 执行方法
-     *
-     * @return
-     */
-    Object proxyInvoke(Object... args);
+public interface MethodProxy {
 
     /**
      * 执行方法回调

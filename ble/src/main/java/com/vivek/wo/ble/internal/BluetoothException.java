@@ -1,6 +1,7 @@
-package com.vivek.wo.ble;
+package com.vivek.wo.ble.internal;
 
 public class BluetoothException extends Exception {
+    //TODO 调整异常
     /**
      * 搜索超时
      */

@@ -4,6 +4,9 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 
+import com.vivek.wo.ble.internal.BluetoothException;
+import com.vivek.wo.ble.internal.OnActionListener;
+
 public abstract class MethodProxyImpl implements MethodProxy {
     private MethodQueueHandler methodQueueHandler;
     BluetoothGattService gattService;
@@ -63,6 +66,8 @@ public abstract class MethodProxyImpl implements MethodProxy {
         this.args = args;
         return this;
     }
+
+    protected abstract Object proxyInvoke(Object... args);
 
     @Override
     public MethodProxy invoke() {

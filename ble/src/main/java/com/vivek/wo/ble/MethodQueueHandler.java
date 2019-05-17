@@ -5,6 +5,8 @@ import android.os.HandlerThread;
 import android.os.Looper;
 import android.os.Message;
 
+import com.vivek.wo.ble.internal.BluetoothException;
+
 import java.util.ArrayList;
 import java.util.List;
 

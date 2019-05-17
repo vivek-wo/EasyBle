@@ -1,4 +1,4 @@
-package com.vivek.wo.ble;
+package com.vivek.wo.ble.internal;
 
 public interface BluetoothStateObserver {
 
