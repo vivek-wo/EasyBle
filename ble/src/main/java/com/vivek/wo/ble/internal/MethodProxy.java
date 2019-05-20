@@ -1,16 +1,6 @@
-package com.vivek.wo.ble;
-
-import com.vivek.wo.ble.internal.BluetoothException;
-import com.vivek.wo.ble.internal.OnActionListener;
+package com.vivek.wo.ble.internal;
 
 public interface MethodProxy {
-
-    /**
-     * 执行方法回调
-     *
-     * @param args
-     */
-    void callback(int result, BluetoothException exception, Object... args);
 
     /**
      * 设置执行方法回调监听
@@ -41,4 +31,11 @@ public interface MethodProxy {
      * @return
      */
     MethodProxy invoke();
+
+    /**
+     * 在队列中执行当前方法
+     *
+     * @return
+     */
+    MethodProxy invokeInQueue();
 }

@@ -1,4 +1,4 @@
-package com.vivek.wo.ble;
+package com.vivek.wo.ble.internal;
 
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
@@ -13,13 +13,10 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 
-import com.vivek.wo.ble.internal.BluetoothCommObserver;
-import com.vivek.wo.ble.internal.BluetoothComms;
-import com.vivek.wo.ble.internal.BluetoothDeviceExtend;
-import com.vivek.wo.ble.internal.BluetoothException;
-import com.vivek.wo.ble.internal.BluetoothStateObserver;
-import com.vivek.wo.ble.internal.CommonMethod;
-import com.vivek.wo.ble.internal.OnActionListener;
+import com.vivek.wo.ble.MethodQueueHandler;
+import com.vivek.wo.ble.OnScanCallback;
+import com.vivek.wo.ble.ScanCallback;
+import com.vivek.wo.ble.SingleFilterScanCallback;
 
 import java.util.ArrayList;
 import java.util.HashMap;

@@ -1,6 +1,7 @@
 package com.vivek.wo.ble;
 
 import com.vivek.wo.ble.internal.BluetoothException;
+import com.vivek.wo.ble.internal.MethodProxy;
 
 public class MethodObject {
     static final long DEFAULT_TIMEOUT = 15 * 1000;

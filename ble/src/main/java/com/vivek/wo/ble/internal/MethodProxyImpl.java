@@ -1,29 +1,28 @@
-package com.vivek.wo.ble;
+package com.vivek.wo.ble.internal;
 
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 
-import com.vivek.wo.ble.internal.BluetoothException;
-import com.vivek.wo.ble.internal.OnActionListener;
+import com.vivek.wo.ble.MethodObject;
 
 public abstract class MethodProxyImpl implements MethodProxy {
-    private MethodQueueHandler methodQueueHandler;
+    //    private MethodQueueHandler methodQueueHandler;
     BluetoothGattService gattService;
     BluetoothGattCharacteristic characteristic;
     BluetoothGattDescriptor descriptor;
-    private OnActionListener listener;
-    private Object[] args;
-    private long timeout;
+    private OnActionListener onActionListener;
+    private Object[] methodArgs;
+    private long methodExecTimeout;
 
     MethodProxyImpl() {
 
     }
 
-    MethodProxyImpl setMethodQueueHandler(MethodQueueHandler handler) {
-        this.methodQueueHandler = handler;
-        return this;
-    }
+//    MethodProxyImpl setMethodQueueHandler(MethodQueueHandler handler) {
+//        this.methodQueueHandler = handler;
+//        return this;
+//    }
 
     MethodProxyImpl setGattService(BluetoothGattService gattService) {
         this.gattService = gattService;
@@ -40,34 +39,33 @@ public abstract class MethodProxyImpl implements MethodProxy {
         return this;
     }
 
-    @Override
-    public void callback(int result, BluetoothException exception, Object... args) {
-        if (result == 0) {
-            this.listener.onSuccess(args);
-        } else {
-            this.listener.onFailure(exception);
-        }
-    }
+//    public void callback(int result, BluetoothException exception, Object... args) {
+//        if (result == 0) {
+//            this.listener.onSuccess(args);
+//        } else {
+//            this.listener.onFailure(exception);
+//        }
+//    }
 
     @Override
     public MethodProxy listen(OnActionListener listener) {
-        this.listener = listener;
+        this.onActionListener = listener;
         return this;
     }
 
     @Override
     public MethodProxy timeout(long timeout) {
-        this.timeout = timeout;
+        this.methodExecTimeout = timeout;
         return this;
     }
 
     @Override
     public MethodProxy parameterArgs(Object... args) {
-        this.args = args;
+        this.methodArgs = args;
         return this;
     }
 
-    protected abstract Object proxyInvoke(Object... args);
+//    protected abstract Object proxyInvoke(Object... args);
 
     @Override
     public MethodProxy invoke() {
@@ -78,5 +76,10 @@ public abstract class MethodProxyImpl implements MethodProxy {
             proxyInvoke(this.args);
         }
         return this;
+    }
+
+    @Override
+    public MethodProxy invokeInQueue() {
+        return null;
     }
 }

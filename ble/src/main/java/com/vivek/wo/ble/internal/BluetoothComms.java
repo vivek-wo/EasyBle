@@ -6,8 +6,6 @@ import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.content.Context;
 
-import com.vivek.wo.ble.MethodProxy;
-import com.vivek.wo.ble.MethodProxyImpl;
 import com.vivek.wo.ble.MethodQueueHandler;
 
 import java.util.List;
