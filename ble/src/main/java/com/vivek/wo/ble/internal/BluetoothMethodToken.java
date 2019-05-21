@@ -4,7 +4,7 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 
-public abstract class MethodProxyImpl implements MethodProxy {
+public abstract class BluetoothMethodToken implements MethodToken {
     //    private MethodQueueHandler methodQueueHandler;
     BluetoothGattService gattService;
     BluetoothGattCharacteristic characteristic;
@@ -13,29 +13,31 @@ public abstract class MethodProxyImpl implements MethodProxy {
     private Object[] methodArgs;
     private long methodExecTimeout;
 
-    MethodProxyImpl() {
+    BluetoothMethodToken() {
 
     }
 
-//    MethodProxyImpl setMethodQueueHandler(MethodQueueHandler handler) {
+//    BluetoothMethodToken setMethodQueueHandler(MethodQueueHandler handler) {
 //        this.methodQueueHandler = handler;
 //        return this;
 //    }
 
-    MethodProxyImpl setGattService(BluetoothGattService gattService) {
+    BluetoothMethodToken setGattService(BluetoothGattService gattService) {
         this.gattService = gattService;
         return this;
     }
 
-    MethodProxyImpl setCharacteristic(BluetoothGattCharacteristic characteristic) {
+    BluetoothMethodToken setCharacteristic(BluetoothGattCharacteristic characteristic) {
         this.characteristic = characteristic;
         return this;
     }
 
-    MethodProxyImpl setDescriptor(BluetoothGattDescriptor descriptor) {
+    BluetoothMethodToken setDescriptor(BluetoothGattDescriptor descriptor) {
         this.descriptor = descriptor;
         return this;
     }
+
+    abstract Object proxyMethod(Object... args);
 
 //    public void callback(int result, BluetoothException exception, Object... args) {
 //        if (result == 0) {
@@ -46,27 +48,25 @@ public abstract class MethodProxyImpl implements MethodProxy {
 //    }
 
     @Override
-    public MethodProxy listen(OnActionListener listener) {
+    public MethodToken listen(OnActionListener listener) {
         this.onActionListener = listener;
         return this;
     }
 
     @Override
-    public MethodProxy timeout(long timeout) {
+    public MethodToken timeout(long timeout) {
         this.methodExecTimeout = timeout;
         return this;
     }
 
     @Override
-    public MethodProxy parameterArgs(Object... args) {
+    public MethodToken parameterArgs(Object... args) {
         this.methodArgs = args;
         return this;
     }
 
-    abstract Object proxyInvoke(Object... args);
-
     @Override
-    public MethodProxy invoke() {
+    public MethodToken invoke() {
 //        if (methodQueueHandler != null) {
 //            MethodObject methodObject = new MethodObject(this, this.args, this.timeout);
 //            methodQueueHandler.invoke(methodObject);
@@ -77,7 +77,7 @@ public abstract class MethodProxyImpl implements MethodProxy {
     }
 
     @Override
-    public MethodProxy invokeInQueue() {
+    public MethodToken invokeInQueue() {
         return null;
     }
 }

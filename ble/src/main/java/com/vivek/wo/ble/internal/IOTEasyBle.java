@@ -72,7 +72,7 @@ public class IOTEasyBle implements BluetoothCommObserver {
      * @return
      * @throws BluetoothException
      */
-    public MethodProxy write(byte[] data) throws BluetoothException {
+    public MethodToken write(byte[] data) throws BluetoothException {
         CommonMethod.checkNotConnected(mBluetoothComms);
         return mBluetoothComms.write(serviceUUIDString, writableCharacteristicUUIDString, data);
     }

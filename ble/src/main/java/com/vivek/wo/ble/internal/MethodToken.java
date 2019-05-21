@@ -1,13 +1,13 @@
 package com.vivek.wo.ble.internal;
 
-public interface MethodProxy {
+public interface MethodToken {
 
     /**
      * 设置执行方法回调监听
      *
      * @param listener
      */
-    MethodProxy listen(OnActionListener listener);
+    MethodToken listen(OnActionListener listener);
 
     /**
      * 设置超时时间
@@ -15,7 +15,7 @@ public interface MethodProxy {
      * @param timeout 毫秒
      * @return
      */
-    MethodProxy timeout(long timeout);
+    MethodToken timeout(long timeout);
 
     /**
      * 设置请求参数
@@ -23,19 +23,19 @@ public interface MethodProxy {
      * @param args
      * @return
      */
-    MethodProxy parameterArgs(Object... args);
+    MethodToken parameterArgs(Object... args);
 
     /**
      * 执行当前方法
      *
      * @return
      */
-    MethodProxy invoke();
+    MethodToken invoke();
 
     /**
      * 在队列中执行当前方法
      *
      * @return
      */
-    MethodProxy invokeInQueue();
+    MethodToken invokeInQueue();
 }

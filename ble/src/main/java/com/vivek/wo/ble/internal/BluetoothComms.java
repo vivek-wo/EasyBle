@@ -79,103 +79,74 @@ public class BluetoothComms extends GattComms {
 //        methodQueueHandler.callback(status, rssi);
     }
 
-    public MethodProxy connect() {
-        return new MethodProxyImpl() {
+    public MethodToken connect() {
+        return new BluetoothMethodToken() {
             @Override
-            public Object proxyInvoke(Object... args) {
+            Object proxyMethod(Object... args) {
                 connect(bluetoothDeviceExtend.getBluetoothDevice(), false);
                 return true;
             }
         };
     }
 
-    public MethodProxy read(String serviceUUID, String characteristicUUIDString) {
-        return read(serviceUUID, characteristicUUIDString, null);
-    }
-
-    public MethodProxy read(String serviceUUIDString, String characteristicUUIDString,
-                            OnActionListener listener) {
+    public MethodToken read(String serviceUUIDString, String characteristicUUIDString) {
         BluetoothGattService gattService = getBluetoothGattService(serviceUUIDString);
         BluetoothGattCharacteristic characteristic = getBluetoothGattCharacteristic(
                 gattService, characteristicUUIDString);
-
-        return new MethodProxyImpl() {
+        return new BluetoothMethodToken() {
             @Override
-            public Object proxyInvoke(Object... args) {
+            Object proxyMethod(Object... args) {
                 return read(this.characteristic);
             }
-        }
-                .setCharacteristic(characteristic)
-                .listen(listener);
+        }.setCharacteristic(characteristic);
     }
 
-    public MethodProxy write(String serviceUUIDString, String characteristicUUIDString, byte[] data) {
-        return write(serviceUUIDString, characteristicUUIDString, data, null);
-    }
-
-    public MethodProxy write(String serviceUUIDString, String characteristicUUIDString, byte[] data,
-                             OnActionListener listener) {
+    public MethodToken write(String serviceUUIDString, String characteristicUUIDString,
+                             byte[] data) {
         BluetoothGattService gattService = getBluetoothGattService(serviceUUIDString);
         BluetoothGattCharacteristic characteristic = getBluetoothGattCharacteristic(
                 gattService, characteristicUUIDString);
-        return new MethodProxyImpl() {
+        return new BluetoothMethodToken() {
             @Override
-            public Object proxyInvoke(Object... args) {
-                return write(characteristic, (byte[]) args[0]);
+            Object proxyMethod(Object... args) {
+                return write(this.characteristic, (byte[]) args[0]);
             }
-        }
-                .setCharacteristic(characteristic)
-                .listen(listener)
-                .parameterArgs(data);
+        }.setCharacteristic(characteristic).parameterArgs(data);
     }
 
-    public MethodProxy notify(String serviceUUIDString, String characteristicUUIDString,
+    public MethodToken notify(String serviceUUIDString, String characteristicUUIDString,
                               String descriptorUUIDString, boolean enable, boolean isIndication) {
-        return notify(serviceUUIDString, characteristicUUIDString, descriptorUUIDString, enable,
-                isIndication, null);
-    }
-
-    public MethodProxy notify(String serviceUUIDString, String characteristicUUIDString,
-                              String descriptorUUIDString, boolean enable, boolean isIndication,
-                              OnActionListener listener) {
         BluetoothGattService gattService = getBluetoothGattService(serviceUUIDString);
         BluetoothGattCharacteristic characteristic = getBluetoothGattCharacteristic(
                 gattService, characteristicUUIDString);
         BluetoothGattDescriptor descriptor = getBluetoothGattDescriptor(
                 characteristic, descriptorUUIDString);
-        return new MethodProxyImpl() {
+        return new BluetoothMethodToken() {
             @Override
-            public Object proxyInvoke(Object... args) {
-                return enable(characteristic, descriptor, (boolean) args[0], (boolean) args[1]);
+            Object proxyMethod(Object... args) {
+                return enable(this.characteristic, this.descriptor,
+                        (boolean) args[0], (boolean) args[1]);
             }
-        }
-                .setCharacteristic(characteristic)
-                .setDescriptor(descriptor)
-                .listen(listener)
-                .parameterArgs(enable, isIndication);
+        }.setCharacteristic(characteristic).setDescriptor(descriptor).parameterArgs(enable, isIndication);
     }
 
-    public MethodProxy rssi() {
-        return rssi(null);
-    }
-
-    public MethodProxy rssi(OnActionListener listener) {
-        return new MethodProxyImpl() {
+    public MethodToken rssi() {
+        return new BluetoothMethodToken() {
             @Override
-            public Object proxyInvoke(Object... args) {
+            Object proxyMethod(Object... args) {
                 return readRemoteRssi();
             }
-        }.listen(listener);
+        };
     }
 
-    public MethodProxy disconnect(OnActionListener listener) {
-        return new MethodProxyImpl() {
+    public MethodToken disconnect(OnActionListener listener) {
+        return new BluetoothMethodToken() {
             @Override
-            public Object proxyInvoke(Object... args) {
+            Object proxyMethod(Object... args) {
                 disconnect();
                 return true;
             }
-        }.listen(listener);
+        };
     }
 
     public List<BluetoothGattService> getGattServiceList() {
