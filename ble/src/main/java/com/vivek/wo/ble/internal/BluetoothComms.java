@@ -48,16 +48,6 @@ public class BluetoothComms extends GattComms {
         super.onServicesDiscovered(gatt, status);
     }
 
-    public MethodProxy connect() {
-        return new MethodProxyImpl() {
-            @Override
-            public Object proxyInvoke(Object... args) {
-                connect(bluetoothDeviceExtend.getBluetoothDevice(), false);
-                return true;
-            }
-        };
-    }
-
     @Override
     public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
         super.onCharacteristicRead(gatt, characteristic, status);
@@ -66,7 +56,37 @@ public class BluetoothComms extends GattComms {
             //读回调
             data = characteristic.getValue();
         }
-        methodQueueHandler.callback(status, data);
+//        methodQueueHandler.callback(status, data);
+    }
+
+    @Override
+    public void onCharacteristicWrite(BluetoothGatt gatt,
+                                      BluetoothGattCharacteristic characteristic, int status) {
+        super.onCharacteristicWrite(gatt, characteristic, status);
+        //写回调
+//        methodQueueHandler.callback(status);
+    }
+
+    @Override
+    public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
+        super.onDescriptorWrite(gatt, descriptor, status);
+//        methodQueueHandler.callback(status);
+    }
+
+    @Override
+    public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status) {
+        super.onReadRemoteRssi(gatt, rssi, status);
+//        methodQueueHandler.callback(status, rssi);
+    }
+
+    public MethodProxy connect() {
+        return new MethodProxyImpl() {
+            @Override
+            public Object proxyInvoke(Object... args) {
+                connect(bluetoothDeviceExtend.getBluetoothDevice(), false);
+                return true;
+            }
+        };
     }
 
     public MethodProxy read(String serviceUUID, String characteristicUUIDString) {
@@ -85,17 +105,8 @@ public class BluetoothComms extends GattComms {
                 return read(this.characteristic);
             }
         }
-                .setMethodQueueHandler(methodQueueHandler)
                 .setCharacteristic(characteristic)
                 .listen(listener);
-    }
-
-    @Override
-    public void onCharacteristicWrite(BluetoothGatt gatt,
-                                      BluetoothGattCharacteristic characteristic, int status) {
-        super.onCharacteristicWrite(gatt, characteristic, status);
-        //写回调
-        methodQueueHandler.callback(status);
     }
 
     public MethodProxy write(String serviceUUIDString, String characteristicUUIDString, byte[] data) {
@@ -113,16 +124,9 @@ public class BluetoothComms extends GattComms {
                 return write(characteristic, (byte[]) args[0]);
             }
         }
-                .setMethodQueueHandler(methodQueueHandler)
                 .setCharacteristic(characteristic)
                 .listen(listener)
                 .parameterArgs(data);
-    }
-
-    @Override
-    public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
-        super.onDescriptorWrite(gatt, descriptor, status);
-        methodQueueHandler.callback(status);
     }
 
     public MethodProxy notify(String serviceUUIDString, String characteristicUUIDString,
@@ -145,17 +149,10 @@ public class BluetoothComms extends GattComms {
                 return enable(characteristic, descriptor, (boolean) args[0], (boolean) args[1]);
             }
         }
-                .setMethodQueueHandler(methodQueueHandler)
                 .setCharacteristic(characteristic)
                 .setDescriptor(descriptor)
                 .listen(listener)
                 .parameterArgs(enable, isIndication);
-    }
-
-    @Override
-    public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status) {
-        super.onReadRemoteRssi(gatt, rssi, status);
-        methodQueueHandler.callback(status, rssi);
     }
 
     public MethodProxy rssi() {
