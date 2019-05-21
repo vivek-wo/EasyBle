@@ -6,8 +6,6 @@ import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.content.Context;
 
-import com.vivek.wo.ble.MethodQueueHandler;
-
 import java.util.List;
 import java.util.UUID;
 
@@ -15,13 +13,14 @@ public class BluetoothComms extends GattComms {
     private static final String TAG = "BluetoothComms";
     private BluetoothDeviceExtend bluetoothDeviceExtend;
     private BluetoothCommObserver bluetoothCommObserver;
-    private MethodQueueHandler methodQueueHandler;
+//    private MethodQueueHandler methodQueueHandler;
 
     public BluetoothComms(Context context, BluetoothDeviceExtend bluetoothDeviceExtend) {
         this(context, bluetoothDeviceExtend, null);
     }
 
-    public BluetoothComms(Context context, BluetoothDeviceExtend bluetoothDeviceExtend, BluetoothCommObserver observer) {
+    public BluetoothComms(Context context, BluetoothDeviceExtend bluetoothDeviceExtend,
+                          BluetoothCommObserver observer) {
         super(context);
         this.bluetoothDeviceExtend = bluetoothDeviceExtend;
         this.bluetoothCommObserver = observer;
@@ -31,9 +30,9 @@ public class BluetoothComms extends GattComms {
         this.bluetoothCommObserver = bluetoothCommObserver;
     }
 
-    public void setMethodQueueHandler(MethodQueueHandler handler) {
-        this.methodQueueHandler = handler;
-    }
+//    public void setMethodQueueHandler(MethodQueueHandler handler) {
+//        this.methodQueueHandler = handler;
+//    }
 
     public BluetoothDeviceExtend getBluetoothDeviceExtend() {
         return bluetoothDeviceExtend;
@@ -50,17 +49,13 @@ public class BluetoothComms extends GattComms {
     }
 
     public MethodProxy connect() {
-        return connect(null);
-    }
-
-    public MethodProxy connect(OnActionListener listener) {
         return new MethodProxyImpl() {
             @Override
             public Object proxyInvoke(Object... args) {
                 connect(bluetoothDeviceExtend.getBluetoothDevice(), false);
                 return true;
             }
-        }.setMethodQueueHandler(methodQueueHandler).listen(listener);
+        };
     }
 
     @Override
@@ -83,6 +78,7 @@ public class BluetoothComms extends GattComms {
         BluetoothGattService gattService = getBluetoothGattService(serviceUUIDString);
         BluetoothGattCharacteristic characteristic = getBluetoothGattCharacteristic(
                 gattService, characteristicUUIDString);
+
         return new MethodProxyImpl() {
             @Override
             public Object proxyInvoke(Object... args) {

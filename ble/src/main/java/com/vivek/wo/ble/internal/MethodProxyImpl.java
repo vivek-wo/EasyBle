@@ -4,8 +4,6 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 
-import com.vivek.wo.ble.MethodObject;
-
 public abstract class MethodProxyImpl implements MethodProxy {
     //    private MethodQueueHandler methodQueueHandler;
     BluetoothGattService gattService;
@@ -65,16 +63,16 @@ public abstract class MethodProxyImpl implements MethodProxy {
         return this;
     }
 
-//    protected abstract Object proxyInvoke(Object... args);
+    abstract Object proxyInvoke(Object... args);
 
     @Override
     public MethodProxy invoke() {
-        if (methodQueueHandler != null) {
-            MethodObject methodObject = new MethodObject(this, this.args, this.timeout);
-            methodQueueHandler.invoke(methodObject);
-        } else {
-            proxyInvoke(this.args);
-        }
+//        if (methodQueueHandler != null) {
+//            MethodObject methodObject = new MethodObject(this, this.args, this.timeout);
+//            methodQueueHandler.invoke(methodObject);
+//        } else {
+//            proxyInvoke(this.args);
+//        }
         return this;
     }
 
