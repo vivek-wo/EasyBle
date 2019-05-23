@@ -80,7 +80,7 @@ public class BluetoothComms extends GattComms {
     }
 
     public MethodToken connect() {
-        return new BluetoothMethodToken() {
+        return new BluetoothMethodToken(this) {
             @Override
             Object proxyMethod(Object... args) {
                 connect(bluetoothDeviceExtend.getBluetoothDevice(), false);
@@ -93,7 +93,7 @@ public class BluetoothComms extends GattComms {
         BluetoothGattService gattService = getBluetoothGattService(serviceUUIDString);
         BluetoothGattCharacteristic characteristic = getBluetoothGattCharacteristic(
                 gattService, characteristicUUIDString);
-        return new BluetoothMethodToken() {
+        return new BluetoothMethodToken(this) {
             @Override
             Object proxyMethod(Object... args) {
                 return read(this.characteristic);
@@ -106,7 +106,7 @@ public class BluetoothComms extends GattComms {
         BluetoothGattService gattService = getBluetoothGattService(serviceUUIDString);
         BluetoothGattCharacteristic characteristic = getBluetoothGattCharacteristic(
                 gattService, characteristicUUIDString);
-        return new BluetoothMethodToken() {
+        return new BluetoothMethodToken(this) {
             @Override
             Object proxyMethod(Object... args) {
                 return write(this.characteristic, (byte[]) args[0]);
@@ -121,7 +121,7 @@ public class BluetoothComms extends GattComms {
                 gattService, characteristicUUIDString);
         BluetoothGattDescriptor descriptor = getBluetoothGattDescriptor(
                 characteristic, descriptorUUIDString);
-        return new BluetoothMethodToken() {
+        return new BluetoothMethodToken(this) {
             @Override
             Object proxyMethod(Object... args) {
                 return enable(this.characteristic, this.descriptor,
@@ -131,7 +131,7 @@ public class BluetoothComms extends GattComms {
     }
 
     public MethodToken rssi() {
-        return new BluetoothMethodToken() {
+        return new BluetoothMethodToken(this) {
             @Override
             Object proxyMethod(Object... args) {
                 return readRemoteRssi();
@@ -140,7 +140,7 @@ public class BluetoothComms extends GattComms {
     }
 
     public MethodToken disconnect(OnActionListener listener) {
-        return new BluetoothMethodToken() {
+        return new BluetoothMethodToken(this) {
             @Override
             Object proxyMethod(Object... args) {
                 disconnect();

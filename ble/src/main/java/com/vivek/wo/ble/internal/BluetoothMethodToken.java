@@ -6,15 +6,20 @@ import android.bluetooth.BluetoothGattService;
 
 public abstract class BluetoothMethodToken implements MethodToken {
     //    private MethodQueueHandler methodQueueHandler;
+
+    private static final long METHODEXEC_DEFAULT_TIMEOUT = 5 * 1000;
+
     BluetoothGattService gattService;
     BluetoothGattCharacteristic characteristic;
     BluetoothGattDescriptor descriptor;
+
+    private BluetoothComms target;
     private OnActionListener onActionListener;
     private Object[] methodArgs;
-    private long methodExecTimeout;
+    private long methodExecTimeout = METHODEXEC_DEFAULT_TIMEOUT;
 
-    BluetoothMethodToken() {
-
+    BluetoothMethodToken(BluetoothComms target) {
+        this.target = target;
     }
 
 //    BluetoothMethodToken setMethodQueueHandler(MethodQueueHandler handler) {
@@ -67,17 +72,17 @@ public abstract class BluetoothMethodToken implements MethodToken {
 
     @Override
     public MethodToken invoke() {
-//        if (methodQueueHandler != null) {
+        return this;
+    }
+
+    @Override
+    public MethodToken invokeInQueue() {
+        //        if (methodQueueHandler != null) {
 //            MethodObject methodObject = new MethodObject(this, this.args, this.timeout);
 //            methodQueueHandler.invoke(methodObject);
 //        } else {
 //            proxyInvoke(this.args);
 //        }
         return this;
-    }
-
-    @Override
-    public MethodToken invokeInQueue() {
-        return null;
     }
 }

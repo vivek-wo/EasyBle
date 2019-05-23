@@ -6,7 +6,6 @@ import android.bluetooth.BluetoothManager;
 import android.content.Context;
 
 import com.vivek.wo.ble.MethodObject;
-import com.vivek.wo.ble.MethodQueueHandler;
 import com.vivek.wo.ble.OnScanCallback;
 import com.vivek.wo.ble.ScanCallback;
 import com.vivek.wo.ble.SingleFilterScanCallback;
@@ -18,7 +17,7 @@ public class IOTEasyBle implements BluetoothCommObserver {
     private BluetoothManager mBluetoothManager;
     private BluetoothAdapter mBluetoothAdapter;
     private BluetoothComms mBluetoothComms;
-    private MethodQueueHandler mMethodQueueHandler;
+    //    private MethodQueueHandler mMethodQueueHandler;
     private BluetoothCommObserver mBluetoothCommObserver;
     private String deviceName;
     private String deviceAddress;
@@ -33,7 +32,7 @@ public class IOTEasyBle implements BluetoothCommObserver {
         mBluetoothManager = (BluetoothManager) mContext
                 .getSystemService(Context.BLUETOOTH_SERVICE);
         mBluetoothAdapter = mBluetoothManager.getAdapter();
-        mMethodQueueHandler = new MethodQueueHandler();
+//        mMethodQueueHandler = new MethodQueueHandler();
         this.deviceName = builder.deviceName;
         this.deviceAddress = builder.deviceAddress;
         this.serviceUUIDString = builder.serviceUUIDString;
@@ -108,9 +107,8 @@ public class IOTEasyBle implements BluetoothCommObserver {
                 new OnScanCallback() {
                     @Override
                     public void onDeviceFound(BluetoothDeviceExtend bluetoothDeviceExtend, List<BluetoothDeviceExtend> result) {
-                        mBluetoothComms = new BluetoothComms(mContext, bluetoothDeviceExtend);
-                        mBluetoothComms.setMethodQueueHandler(mMethodQueueHandler);
-                        mBluetoothComms.connect(listener).invoke();
+//                        mBluetoothComms.setMethodQueueHandler(mMethodQueueHandler);
+                        connect(MethodObject.DEFAULT_TIMEOUT, listener, bluetoothDeviceExtend);
                     }
 
                     @Override
@@ -156,16 +154,24 @@ public class IOTEasyBle implements BluetoothCommObserver {
      * @param timeout
      * @param listener
      */
-    public void connect(long timeout, final OnActionListener listener) throws BluetoothException {
+    public void connect(long timeout, OnActionListener listener)
+            throws BluetoothException {
         innerConnect(timeout, listener);
     }
 
-    private void innerConnect(long timeout, final OnActionListener listener) throws BluetoothException {
+    private void innerConnect(long timeout, OnActionListener listener)
+            throws BluetoothException {
         CommonMethod.checkBluetoothAddress(deviceAddress);
         BluetoothDevice device = CommonMethod.getRemoteDevice(mBluetoothAdapter, deviceAddress);
-        mBluetoothComms = new BluetoothComms(mContext, new BluetoothDeviceExtend(device));
-        mBluetoothComms.setMethodQueueHandler(mMethodQueueHandler);
-        mBluetoothComms.connect(listener).timeout(timeout).invoke();
+//        mBluetoothComms.setMethodQueueHandler(mMethodQueueHandler);
+        connect(timeout, listener, new BluetoothDeviceExtend(device));
+    }
+
+    private void connect(long timeout, OnActionListener listener,
+                         BluetoothDeviceExtend bluetoothDeviceExtend) {
+        mBluetoothComms = new BluetoothComms(mContext, bluetoothDeviceExtend);
+//        mBluetoothComms.setMethodQueueHandler(mMethodQueueHandler);
+        mBluetoothComms.connect().listen(listener).timeout(timeout).invoke();
     }
 
     @Override
