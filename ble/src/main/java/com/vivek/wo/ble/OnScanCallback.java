@@ -1,7 +1,5 @@
 package com.vivek.wo.ble;
 
-import com.vivek.wo.ble.internal.BluetoothDeviceExtend;
-
 import java.util.List;
 
 public interface OnScanCallback {

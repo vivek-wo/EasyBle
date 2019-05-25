@@ -1,14 +1,9 @@
-package com.vivek.wo.ble.internal;
+package com.vivek.wo.ble;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
 import android.content.Context;
-
-import com.vivek.wo.ble.MethodObject;
-import com.vivek.wo.ble.OnScanCallback;
-import com.vivek.wo.ble.ScanCallback;
-import com.vivek.wo.ble.SingleFilterScanCallback;
 
 import java.util.List;
 
@@ -17,7 +12,6 @@ public class IOTEasyBle implements BluetoothCommObserver {
     private BluetoothManager mBluetoothManager;
     private BluetoothAdapter mBluetoothAdapter;
     private BluetoothComms mBluetoothComms;
-    //    private MethodQueueHandler mMethodQueueHandler;
     private BluetoothCommObserver mBluetoothCommObserver;
     private String deviceName;
     private String deviceAddress;
@@ -60,8 +54,10 @@ public class IOTEasyBle implements BluetoothCommObserver {
      */
     public void notify(boolean enable, OnActionListener listener) throws BluetoothException {
         CommonMethod.checkNotConnected(mBluetoothComms);
-        mBluetoothComms.notify(serviceUUIDString, noticableCharacteristicUUIDString,
-                noticableDescriptorUUIDString, enable, false, listener).invoke();
+        mBluetoothComms
+                .notify(serviceUUIDString, noticableCharacteristicUUIDString,
+                        noticableDescriptorUUIDString, enable, false)
+                .invoke();
     }
 
     /**
@@ -71,9 +67,11 @@ public class IOTEasyBle implements BluetoothCommObserver {
      * @return
      * @throws BluetoothException
      */
-    public MethodToken write(byte[] data) throws BluetoothException {
+    public void write(byte[] data) throws BluetoothException {
         CommonMethod.checkNotConnected(mBluetoothComms);
-        return mBluetoothComms.write(serviceUUIDString, writableCharacteristicUUIDString, data);
+        mBluetoothComms
+                .write(serviceUUIDString, writableCharacteristicUUIDString, data)
+                .invoke();
     }
 
     /**

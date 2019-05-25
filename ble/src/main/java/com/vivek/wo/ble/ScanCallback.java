@@ -12,8 +12,6 @@ import android.os.Handler;
 import android.os.Looper;
 import android.support.annotation.RequiresApi;
 
-import com.vivek.wo.ble.internal.BluetoothDeviceExtend;
-
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;

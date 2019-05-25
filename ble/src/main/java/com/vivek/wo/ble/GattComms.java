@@ -1,4 +1,4 @@
-package com.vivek.wo.ble.internal;
+package com.vivek.wo.ble;
 
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;

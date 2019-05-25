@@ -1,4 +1,4 @@
-package com.vivek.wo.ble.internal;
+package com.vivek.wo.ble;
 
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
@@ -13,11 +13,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 
-import com.vivek.wo.ble.MethodQueueHandler;
-import com.vivek.wo.ble.OnScanCallback;
-import com.vivek.wo.ble.ScanCallback;
-import com.vivek.wo.ble.SingleFilterScanCallback;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -28,7 +23,6 @@ public class EasyBle {
     private Context mContext;
     private BluetoothManager mBluetoothManager;
     private BluetoothAdapter mBluetoothAdapter;
-    private MethodQueueHandler mMethodQueueHandler;
     private BluetoothStateObserver mStateObserver;
     private BroadcastReceiver mBluetoothStateChangedReceiver;
     private ScanCallback mScanCallback;
@@ -36,7 +30,7 @@ public class EasyBle {
     private Map<String, BluetoothComms> mConnectedDeviceExtendMap = new HashMap<>();
 
     private EasyBle() {
-        mMethodQueueHandler = new MethodQueueHandler();
+
     }
 
     private static class EasyBleHolder {
@@ -195,8 +189,7 @@ public class EasyBle {
     public void connect(BluetoothDeviceExtend bluetoothDeviceExtend,
                         OnActionListener listener) {
         BluetoothComms comms = new BluetoothComms(mContext, bluetoothDeviceExtend);
-        comms.setMethodQueueHandler(mMethodQueueHandler);
-        comms.connect(listener).invoke();
+        comms.connect().invoke();
     }
 
     /**
@@ -206,8 +199,7 @@ public class EasyBle {
         CommonMethod.checkBluetoothAddress(deviceAddress);
         BluetoothDevice device = CommonMethod.getRemoteDevice(mBluetoothAdapter, deviceAddress);
         BluetoothComms comms = new BluetoothComms(mContext, new BluetoothDeviceExtend(device));
-        comms.setMethodQueueHandler(mMethodQueueHandler);
-        comms.connect(listener).invoke();
+        comms.connect().invoke();
     }
 
     /**
@@ -219,8 +211,7 @@ public class EasyBle {
                     @Override
                     public void onDeviceFound(BluetoothDeviceExtend bluetoothDeviceExtend, List<BluetoothDeviceExtend> result) {
                         BluetoothComms comms = new BluetoothComms(mContext, bluetoothDeviceExtend);
-                        comms.setMethodQueueHandler(mMethodQueueHandler);
-                        comms.connect(listener).invoke();
+                        comms.connect().invoke();
                     }
 
                     @Override
@@ -268,7 +259,7 @@ public class EasyBle {
             throws BluetoothException {
         BluetoothComms comms = mConnectedDeviceExtendMap.get(deviceAddress);
         CommonMethod.checkNotConnected(comms);
-        comms.read(serviceUUIDString, characteristicUUIDString, listener).invoke();
+        comms.read(serviceUUIDString, characteristicUUIDString).invoke();
     }
 
     /**
@@ -279,7 +270,7 @@ public class EasyBle {
             throws BluetoothException {
         BluetoothComms comms = mConnectedDeviceExtendMap.get(deviceAddress);
         CommonMethod.checkNotConnected(comms);
-        comms.write(serviceUUIDString, characteristicUUIDString, data, listener).invoke();
+        comms.write(serviceUUIDString, characteristicUUIDString, data).invoke();
     }
 
     /**
@@ -292,7 +283,7 @@ public class EasyBle {
         BluetoothComms comms = mConnectedDeviceExtendMap.get(deviceAddress);
         CommonMethod.checkNotConnected(comms);
         comms.notify(serviceUUIDString, characteristicUUIDString, descriptorUUIDString,
-                enable, isIndication, listener).invoke();
+                enable, isIndication).invoke();
     }
 
     /**
@@ -302,7 +293,7 @@ public class EasyBle {
             throws BluetoothException {
         BluetoothComms comms = mConnectedDeviceExtendMap.get(deviceAddress);
         CommonMethod.checkNotConnected(comms);
-        comms.rssi(listener).invoke();
+        comms.rssi().invoke();
     }
 
     /**

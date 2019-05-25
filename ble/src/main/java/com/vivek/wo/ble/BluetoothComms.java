@@ -1,4 +1,4 @@
-package com.vivek.wo.ble.internal;
+package com.vivek.wo.ble;
 
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
@@ -13,7 +13,6 @@ public class BluetoothComms extends GattComms {
     private static final String TAG = "BluetoothComms";
     private BluetoothDeviceExtend bluetoothDeviceExtend;
     private BluetoothCommObserver bluetoothCommObserver;
-//    private MethodQueueHandler methodQueueHandler;
 
     public BluetoothComms(Context context, BluetoothDeviceExtend bluetoothDeviceExtend) {
         this(context, bluetoothDeviceExtend, null);
@@ -29,10 +28,6 @@ public class BluetoothComms extends GattComms {
     public void setBluetoothCommObserver(BluetoothCommObserver bluetoothCommObserver) {
         this.bluetoothCommObserver = bluetoothCommObserver;
     }
-
-//    public void setMethodQueueHandler(MethodQueueHandler handler) {
-//        this.methodQueueHandler = handler;
-//    }
 
     public BluetoothDeviceExtend getBluetoothDeviceExtend() {
         return bluetoothDeviceExtend;
@@ -56,7 +51,6 @@ public class BluetoothComms extends GattComms {
             //读回调
             data = characteristic.getValue();
         }
-//        methodQueueHandler.callback(status, data);
     }
 
     @Override
@@ -64,19 +58,16 @@ public class BluetoothComms extends GattComms {
                                       BluetoothGattCharacteristic characteristic, int status) {
         super.onCharacteristicWrite(gatt, characteristic, status);
         //写回调
-//        methodQueueHandler.callback(status);
     }
 
     @Override
     public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
         super.onDescriptorWrite(gatt, descriptor, status);
-//        methodQueueHandler.callback(status);
     }
 
     @Override
     public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status) {
         super.onReadRemoteRssi(gatt, rssi, status);
-//        methodQueueHandler.callback(status, rssi);
     }
 
     public MethodToken connect() {

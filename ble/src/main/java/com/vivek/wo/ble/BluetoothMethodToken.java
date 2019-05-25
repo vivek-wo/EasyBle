@@ -1,4 +1,4 @@
-package com.vivek.wo.ble.internal;
+package com.vivek.wo.ble;
 
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
@@ -77,12 +77,6 @@ public abstract class BluetoothMethodToken implements MethodToken {
 
     @Override
     public MethodToken invokeInQueue() {
-        //        if (methodQueueHandler != null) {
-//            MethodObject methodObject = new MethodObject(this, this.args, this.timeout);
-//            methodQueueHandler.invoke(methodObject);
-//        } else {
-//            proxyInvoke(this.args);
-//        }
         return this;
     }
 }
