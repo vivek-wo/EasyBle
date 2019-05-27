@@ -6,13 +6,17 @@ import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.content.Context;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 public class BluetoothComms extends GattComms {
     private static final String TAG = "BluetoothComms";
     private BluetoothDeviceExtend bluetoothDeviceExtend;
     private BluetoothCommObserver bluetoothCommObserver;
+    private Map<String, BluetoothMethodToken> invokedMethodTokenMaps =
+            new LinkedHashMap<>(4);
 
     public BluetoothComms(Context context, BluetoothDeviceExtend bluetoothDeviceExtend) {
         this(context, bluetoothDeviceExtend, null);
@@ -71,9 +75,10 @@ public class BluetoothComms extends GattComms {
     }
 
     public MethodToken connect() {
-        return new BluetoothMethodToken(this) {
+        return new BluetoothMethodToken("connect-token", this) {
             @Override
             Object proxyMethod(Object... args) {
+                invokedMethodTokenMaps.put(getContextHandler(), this);
                 connect(bluetoothDeviceExtend.getBluetoothDevice(), false);
                 return true;
             }
@@ -84,7 +89,7 @@ public class BluetoothComms extends GattComms {
         BluetoothGattService gattService = getBluetoothGattService(serviceUUIDString);
         BluetoothGattCharacteristic characteristic = getBluetoothGattCharacteristic(
                 gattService, characteristicUUIDString);
-        return new BluetoothMethodToken(this) {
+        return new BluetoothMethodToken("read-token", this) {
             @Override
             Object proxyMethod(Object... args) {
                 return read(this.characteristic);
@@ -97,7 +102,7 @@ public class BluetoothComms extends GattComms {
         BluetoothGattService gattService = getBluetoothGattService(serviceUUIDString);
         BluetoothGattCharacteristic characteristic = getBluetoothGattCharacteristic(
                 gattService, characteristicUUIDString);
-        return new BluetoothMethodToken(this) {
+        return new BluetoothMethodToken("write-token", this) {
             @Override
             Object proxyMethod(Object... args) {
                 return write(this.characteristic, (byte[]) args[0]);
@@ -112,7 +117,7 @@ public class BluetoothComms extends GattComms {
                 gattService, characteristicUUIDString);
         BluetoothGattDescriptor descriptor = getBluetoothGattDescriptor(
                 characteristic, descriptorUUIDString);
-        return new BluetoothMethodToken(this) {
+        return new BluetoothMethodToken("notify-token", this) {
             @Override
             Object proxyMethod(Object... args) {
                 return enable(this.characteristic, this.descriptor,
@@ -122,7 +127,7 @@ public class BluetoothComms extends GattComms {
     }
 
     public MethodToken rssi() {
-        return new BluetoothMethodToken(this) {
+        return new BluetoothMethodToken("rssi-token", this) {
             @Override
             Object proxyMethod(Object... args) {
                 return readRemoteRssi();
@@ -131,7 +136,7 @@ public class BluetoothComms extends GattComms {
     }
 
     public MethodToken disconnect(OnActionListener listener) {
-        return new BluetoothMethodToken(this) {
+        return new BluetoothMethodToken("disconnect-token", this) {
             @Override
             Object proxyMethod(Object... args) {
                 disconnect();
