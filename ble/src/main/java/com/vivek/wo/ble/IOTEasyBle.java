@@ -106,7 +106,7 @@ public class IOTEasyBle implements BluetoothCommObserver {
                     @Override
                     public void onDeviceFound(BluetoothDeviceExtend bluetoothDeviceExtend, List<BluetoothDeviceExtend> result) {
 //                        mBluetoothComms.setMethodQueueHandler(mMethodQueueHandler);
-                        connect(MethodObject.DEFAULT_TIMEOUT, listener, bluetoothDeviceExtend);
+//                        connect(MethodObject.DEFAULT_TIMEOUT, listener, bluetoothDeviceExtend);
                     }
 
                     @Override
@@ -134,7 +134,7 @@ public class IOTEasyBle implements BluetoothCommObserver {
      * 直接进行蓝牙连接
      */
     public void connect() throws BluetoothException {
-        connect(MethodObject.DEFAULT_TIMEOUT);
+//        connect(MethodObject.DEFAULT_TIMEOUT);
     }
 
     /**

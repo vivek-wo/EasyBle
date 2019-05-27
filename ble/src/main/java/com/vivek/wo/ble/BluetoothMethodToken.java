@@ -4,7 +4,7 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 
-public abstract class BluetoothMethodToken implements MethodToken {
+abstract class BluetoothMethodToken implements MethodToken {
     private static final long METHODEXEC_DEFAULT_TIMEOUT = 5 * 1000;
 
     private String contextHandler;
@@ -13,14 +13,18 @@ public abstract class BluetoothMethodToken implements MethodToken {
     BluetoothGattCharacteristic characteristic;
     BluetoothGattDescriptor descriptor;
 
-    private BluetoothComms target;
+    //    private BluetoothComms target;
     private OnActionListener onActionListener;
-    private Object[] methodArgs;
-    private long methodExecTimeout = METHODEXEC_DEFAULT_TIMEOUT;
+    private Object[] args;
+    private long methodExecuteTimeout = METHODEXEC_DEFAULT_TIMEOUT;
+
+    BluetoothMethodToken(String contextHandler) {
+        this(contextHandler, null);
+    }
 
     BluetoothMethodToken(String contextHandler, BluetoothComms target) {
         this.contextHandler = contextHandler;
-        this.target = target;
+//        this.target = target;
     }
 
     String getContextHandler() {
@@ -52,24 +56,38 @@ public abstract class BluetoothMethodToken implements MethodToken {
 
     @Override
     public MethodToken timeout(long timeout) {
-        this.methodExecTimeout = timeout;
+        this.methodExecuteTimeout = timeout;
         return this;
     }
 
     @Override
     public MethodToken parameterArgs(Object... args) {
-        this.methodArgs = args;
+        this.args = args;
         return this;
     }
 
     @Override
     public MethodToken invoke() {
-        Object object = proxyMethod(this.methodArgs);
+        Object object = proxyMethod(this.args);
         return this;
     }
 
     @Override
     public MethodToken invokeInQueue() {
         return this;
+    }
+
+    static class QueueObject {
+        private BluetoothMethodToken target;
+        private Object[] args;
+
+        QueueObject(BluetoothMethodToken target) {
+            this.target = target;
+        }
+
+        public QueueObject setParamtersArgs(Object[] args) {
+            this.args = args;
+            return this;
+        }
     }
 }

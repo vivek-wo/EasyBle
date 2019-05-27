@@ -1,8 +1,8 @@
 package com.vivek.wo.ble;
 
-import java.util.Queue;
+public interface QueuePool<T> {
 
-public interface QueuePool {
+    void add(T object);
 
-    Queue
+    T remove();
 }

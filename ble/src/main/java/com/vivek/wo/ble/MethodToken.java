@@ -38,4 +38,5 @@ public interface MethodToken {
      * @return
      */
     MethodToken invokeInQueue();
+
 }
