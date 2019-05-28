@@ -20,28 +20,44 @@ public class ObjectQueuePool extends Handler implements QueuePool<BluetoothMetho
 
     @Override
     public void add(BluetoothMethodToken.QueueObject object) {
-        if (!handleActive) {
-            handleActive = true;
-            if (sendMessage(obtainMessage())) {
-                throw new BluetoothException(BluetoothException.BLUETOOTH_QUEUEPOOL_LOOPERROR,
-                        "Bluetooth method queue loop failure!");
+        synchronized (this) {
+            if (!handleActive) {
+                queue.offer(object);
+                handleActive = true;
+                if (sendMessage(obtainMessage())) {
+                    throw new BluetoothException(BluetoothException.BLUETOOTH_QUEUEPOOL_LOOPERROR,
+                            "Bluetooth method queue loop failure!");
+                }
             }
         }
     }
 
     @Override
     public BluetoothMethodToken.QueueObject remove() {
-        return null;
+        return queue.poll();
     }
 
     @Override
     public void clear() {
-
+        synchronized (this) {
+            queue.clear();
+        }
     }
 
     @Override
     public void handleMessage(Message msg) {
         super.handleMessage(msg);
+        BluetoothMethodToken.QueueObject object = null;
+        while (true) {
+            synchronized (this) {
+                object = remove();
+                if (object == null) {
+                    handleActive = false;
+                    break;
+                }
+            }
 
+
+        }
     }
 }
