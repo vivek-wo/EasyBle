@@ -78,6 +78,7 @@ abstract class GattComms extends BluetoothGattCallback {
         if (newState == BluetoothGatt.STATE_CONNECTED) {
             gatt.discoverServices();
         } else if (newState == BluetoothGatt.STATE_DISCONNECTED) {
+            gatt.close();
             mConnectState = ConnectStateEnum.STATE_DISCONNECTED;
         } else if (newState == BluetoothGatt.STATE_CONNECTING) {
             mConnectState = ConnectStateEnum.STATE_CONNECTING;

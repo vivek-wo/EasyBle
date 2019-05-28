@@ -5,4 +5,6 @@ public interface QueuePool<T> {
     void add(T object);
 
     T remove();
+
+    void clear();
 }

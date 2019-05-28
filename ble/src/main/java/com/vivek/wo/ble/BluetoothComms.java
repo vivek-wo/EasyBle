@@ -40,11 +40,23 @@ public class BluetoothComms extends GattComms {
     @Override
     public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
         super.onConnectionStateChange(gatt, status, newState);
+        if (mConnectState == ConnectStateEnum.STATE_DISCONNECTED) {
+            if (status == BluetoothGatt.GATT_SUCCESS) {
+                //断开连接
+            } else {
+                //连接失败
+            }
+        }
     }
 
     @Override
     public void onServicesDiscovered(BluetoothGatt gatt, int status) {
         super.onServicesDiscovered(gatt, status);
+        if (mConnectState == ConnectStateEnum.STATE_CONNECTED) {
+            //连接并检索服务特征成功
+        } else {
+            //连接检索服务特征失败
+        }
     }
 
     @Override

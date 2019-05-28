@@ -7,13 +7,12 @@ import android.bluetooth.BluetoothGattService;
 abstract class BluetoothMethodToken implements MethodToken {
     private static final long METHODEXEC_DEFAULT_TIMEOUT = 5 * 1000;
 
-    private String contextHandler;
-
     BluetoothGattService gattService;
     BluetoothGattCharacteristic characteristic;
     BluetoothGattDescriptor descriptor;
 
     //    private BluetoothComms target;
+    private String contextHandler;
     private OnActionListener onActionListener;
     private Object[] args;
     private long methodExecuteTimeout = METHODEXEC_DEFAULT_TIMEOUT;
@@ -75,6 +74,16 @@ abstract class BluetoothMethodToken implements MethodToken {
     @Override
     public MethodToken invokeInQueue() {
         return this;
+    }
+
+    public void callback(BluetoothException e, Object... args) {
+        if (this.onActionListener != null) {
+            if (e == null) {
+                this.onActionListener.onSuccess(args);
+            } else {
+                this.onActionListener.onFailure(e);
+            }
+        }
     }
 
     static class QueueObject {

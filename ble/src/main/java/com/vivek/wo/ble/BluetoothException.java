@@ -1,30 +1,31 @@
 package com.vivek.wo.ble;
 
-public class BluetoothException extends Exception {
-    //TODO 调整异常
-    /**
-     * 搜索超时
-     */
-    public static final int BLUETOOTH_SCAN_TIMEOUT = -5;
+public class BluetoothException extends RuntimeException {
+    public static final int BLUETOOTH_QUEUEPOOL_LOOPERROR = -1000;//蓝牙队列循环执行异常
 
-    /**
-     * 方法执行超时
-     */
-    public static final int BLUETOOTH_FUNCTION_TIMEOUT = -1;
-    /**
-     * 方法执行失败
-     */
-    public static final int BLUETOOTH_EXECUTE_FAILURE = -2;
+//    /**
+//     * 搜索超时
+//     */
+//    public static final int BLUETOOTH_SCAN_TIMEOUT = -5;
 
-    /**
-     * 无蓝牙设备
-     */
-    public static final int BLUETOOTH_REMOTEDEVICE_NOIFOUND = -10;
+//    /**
+//     * 方法执行超时
+//     */
+//    public static final int BLUETOOTH_FUNCTION_TIMEOUT = -1;
+//    /**
+//     * 方法执行失败
+//     */
+//    public static final int BLUETOOTH_EXECUTE_FAILURE = -2;
 
-    /**
-     * 远程设备无连接
-     */
-    public static final int BLUETOOTH_REMOTEDEVICE_NOICONNECTED = -11;
+//    /**
+//     * 无蓝牙设备
+//     */
+//    public static final int BLUETOOTH_REMOTEDEVICE_NOIFOUND = -10;
+
+//    /**
+//     * 远程设备无连接
+//     */
+//    public static final int BLUETOOTH_REMOTEDEVICE_NOICONNECTED = -11;
 
     private int reasonCode;
 
@@ -49,4 +50,6 @@ public class BluetoothException extends Exception {
     public int getReasonCode() {
         return this.reasonCode;
     }
+
+
 }
