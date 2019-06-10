@@ -117,9 +117,7 @@ public class IOTEasyBle implements BluetoothCommObserver {
                     public void onScanTimeout() {
                         if (listener != null) {
                             BluetoothException exception = new BluetoothException(
-                                    BluetoothException.BLUETOOTH_SCAN_TIMEOUT,
                                     "Scan timeout.");
-
                             listener.onFailure(exception);
                         }
                     }
@@ -187,7 +185,7 @@ public class IOTEasyBle implements BluetoothCommObserver {
     }
 
     @Override
-    public void remoteDataChanged(byte[] data) {
+    public void remoteDataChanged(byte[] data, Object... args) {
         if (mBluetoothCommObserver != null) {
             mBluetoothCommObserver.remoteDataChanged(data);
         }

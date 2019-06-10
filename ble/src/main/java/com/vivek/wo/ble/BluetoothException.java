@@ -3,6 +3,12 @@ package com.vivek.wo.ble;
 public class BluetoothException extends RuntimeException {
     public static final int BLUETOOTH_QUEUEPOOL_LOOPERROR = -1000;//蓝牙队列循环执行异常
 
+
+    public static final int BLUETOOTH_REMOTEDEVICE_NOIFOUND = -1;//远程设备无法找到
+
+    public static final int BLUETOOTH_REMOTEDEVICE_NOICONNECTED = -2;//远程设备未连接
+
+
 //    /**
 //     * 搜索超时
 //     */

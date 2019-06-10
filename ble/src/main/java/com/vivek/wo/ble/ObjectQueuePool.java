@@ -57,7 +57,6 @@ public class ObjectQueuePool extends Handler implements QueuePool<BluetoothMetho
                 }
             }
 
-
         }
     }
 }

@@ -8,7 +8,7 @@ public class CommonMethod {
     static void checkBluetoothAddress(String deviceAddress) throws BluetoothException {
         if (!BluetoothAdapter.checkBluetoothAddress(deviceAddress)) {
             throw new BluetoothException(
-                    new IllegalArgumentException("Connect deviceAddress not a String Bluetooth address."));
+                    new IllegalArgumentException("Connect deviceAddress not a String bluetooth address."));
         }
     }
 

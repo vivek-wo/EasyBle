@@ -229,6 +229,7 @@ abstract class GattComms extends BluetoothGattCallback {
     }
 
     void connect(BluetoothDevice bluetoothDevice, boolean autoConnect) {
+        mConnectState = ConnectStateEnum.STATE_CONNECTING;
         bluetoothDevice.connectGatt(mContext, autoConnect, this);
     }
 

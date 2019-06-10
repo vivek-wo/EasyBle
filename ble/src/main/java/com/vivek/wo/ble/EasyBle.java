@@ -222,7 +222,6 @@ public class EasyBle {
                     public void onScanTimeout() {
                         if (listener != null) {
                             BluetoothException exception = new BluetoothException(
-                                    BluetoothException.BLUETOOTH_SCAN_TIMEOUT,
                                     "Scan timeout.");
                             listener.onFailure(exception);
                         }

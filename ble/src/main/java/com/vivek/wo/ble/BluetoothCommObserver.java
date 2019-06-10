@@ -18,6 +18,7 @@ public interface BluetoothCommObserver {
      * 远程数据监听
      *
      * @param data
+     * @param args
      */
-    void remoteDataChanged(byte[] data);
+    void remoteDataChanged(byte[] data, Object... args);
 }
