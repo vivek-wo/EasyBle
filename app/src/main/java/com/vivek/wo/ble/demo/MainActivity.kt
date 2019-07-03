@@ -4,6 +4,12 @@ import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.support.v4.app.ActivityCompat
+import android.support.v4.content.ContextCompat
+import android.support.v7.app.AppCompatActivity
+import android.support.v7.widget.DividerItemDecoration
+import android.support.v7.widget.LinearLayoutManager
+import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -12,6 +18,8 @@ import com.vivek.wo.ble.BluetoothDeviceExtend
 import com.vivek.wo.ble.OnScanCallback
 import com.vivek.wo.ble.PrintLog
 import com.vivek.wo.ble.ScanCallback
+import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.item_list_main.view.*
 
 class MainActivity : AppCompatActivity() {
     val PERMISSION_REQUESTCODE = 1001
@@ -117,7 +125,7 @@ class MainActivity : AppCompatActivity() {
                 itemView.itemlist_m_txt_rssi.text = deviceItem.rssi.toString()
                 itemView.itemlist_m_txt_name.text = deviceItem.deviceName
                 itemView.itemlist_m_txt_adress.text = deviceItem.deviceAddress
-                if (deviceItem.isConnected) {
+                if (1 == 0) {
                     itemView.itemlist_m_txt_connectstatus.text = "Connected"
                 } else {
                     itemView.itemlist_m_txt_connectstatus.text = "Disconnected"

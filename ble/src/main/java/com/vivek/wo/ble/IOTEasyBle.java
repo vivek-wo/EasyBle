@@ -1,18 +1,20 @@
 package com.vivek.wo.ble;
 
 import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
 import android.content.Context;
 
+import com.vivek.wo.ble.internal.BluetoothException;
+import com.vivek.wo.ble.internal.GattCommsObserver;
+
 import java.util.List;
 
-public class IOTEasyBle implements BluetoothCommObserver {
+public class IOTEasyBle implements GattCommsObserver {
     private Context mContext;
     private BluetoothManager mBluetoothManager;
     private BluetoothAdapter mBluetoothAdapter;
     private BluetoothComms mBluetoothComms;
-    private BluetoothCommObserver mBluetoothCommObserver;
+    private GattCommsObserver mGattCommsObserver;
     private String deviceName;
     private String deviceAddress;
     private String serviceUUIDString;
@@ -41,8 +43,8 @@ public class IOTEasyBle implements BluetoothCommObserver {
      *
      * @param observer
      */
-    public void setBluetoothCommObserver(BluetoothCommObserver observer) {
-        mBluetoothCommObserver = observer;
+    public void setBluetoothCommObserver(GattCommsObserver observer) {
+        mGattCommsObserver = observer;
     }
 
     /**
@@ -53,11 +55,6 @@ public class IOTEasyBle implements BluetoothCommObserver {
      * @throws BluetoothException
      */
     public void notify(boolean enable, OnActionListener listener) throws BluetoothException {
-        CommonMethod.checkNotConnected(mBluetoothComms);
-        mBluetoothComms
-                .notify(serviceUUIDString, noticableCharacteristicUUIDString,
-                        noticableDescriptorUUIDString, enable, false)
-                .invoke();
     }
 
     /**
@@ -68,10 +65,6 @@ public class IOTEasyBle implements BluetoothCommObserver {
      * @throws BluetoothException
      */
     public void write(byte[] data) throws BluetoothException {
-        CommonMethod.checkNotConnected(mBluetoothComms);
-        mBluetoothComms
-                .write(serviceUUIDString, writableCharacteristicUUIDString, data)
-                .invoke();
     }
 
     /**
@@ -157,37 +150,23 @@ public class IOTEasyBle implements BluetoothCommObserver {
 
     private void innerConnect(long timeout, OnActionListener listener)
             throws BluetoothException {
-        CommonMethod.checkBluetoothAddress(deviceAddress);
-        BluetoothDevice device = CommonMethod.getRemoteDevice(mBluetoothAdapter, deviceAddress);
-//        mBluetoothComms.setMethodQueueHandler(mMethodQueueHandler);
-        connect(timeout, listener, new BluetoothDeviceExtend(device));
     }
 
     private void connect(long timeout, OnActionListener listener,
                          BluetoothDeviceExtend bluetoothDeviceExtend) {
-        mBluetoothComms = new BluetoothComms(mContext, bluetoothDeviceExtend);
-//        mBluetoothComms.setMethodQueueHandler(mMethodQueueHandler);
-        mBluetoothComms.connect().listen(listener).timeout(timeout).invoke();
     }
 
     @Override
     public void connectComplete() {
-        if (mBluetoothCommObserver != null) {
-            mBluetoothCommObserver.connectComplete();
+        if (mGattCommsObserver != null) {
+            mGattCommsObserver.connectComplete();
         }
     }
 
     @Override
     public void connectLost(Throwable throwable) {
-        if (mBluetoothCommObserver != null) {
-            mBluetoothCommObserver.connectLost(throwable);
-        }
-    }
-
-    @Override
-    public void remoteDataChanged(byte[] data, Object... args) {
-        if (mBluetoothCommObserver != null) {
-            mBluetoothCommObserver.remoteDataChanged(data);
+        if (mGattCommsObserver != null) {
+            mGattCommsObserver.connectLost(throwable);
         }
     }
 

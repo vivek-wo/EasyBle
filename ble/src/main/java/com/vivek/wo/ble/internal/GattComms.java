@@ -1,4 +1,4 @@
-package com.vivek.wo.ble;
+package com.vivek.wo.ble.internal;
 
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
@@ -13,16 +13,16 @@ import android.support.annotation.RequiresApi;
 import java.lang.reflect.Method;
 import java.util.UUID;
 
-abstract class GattComms extends BluetoothGattCallback {
+public abstract class GattComms extends BluetoothGattCallback {
+    private static final String TAG = "GattComms";
     //系统默认
     public static final String CLIENT_CHARACTERISTIC_CONFIG =
             "00002902-0000-1000-8000-00805f9b34fb";
-    private static final String TAG = "GattComms";
-    Context mContext;
-    BluetoothGatt mBluetoothGatt;
-    //TODO 状态同步问题
-    volatile ConnectStateEnum mConnectState = ConnectStateEnum.STATE_NOTCONNECT;//连接状态
-    boolean isActiveDisconnect = false;//是否主动断开连接
+    private Context mContext;
+    private boolean isActiveDisconnect = false;//是否主动断开连接
+    private volatile ConnectStateEnum mConnectState = ConnectStateEnum.STATE_NOTCONNECT;//连接状态
+
+    protected BluetoothGatt mBluetoothGatt; //提供子类使用
 
     enum ConnectStateEnum {
         /**
@@ -61,6 +61,12 @@ abstract class GattComms extends BluetoothGattCallback {
         mContext = context;
     }
 
+    private void changeConnectionState(ConnectStateEnum connectStateEnum) {
+        synchronized (mConnectState) {
+            mConnectState = connectStateEnum;
+        }
+    }
+
     /**
      * Callback indicating when GATT client has connected/disconnected to/from a remote
      * GATT server.
@@ -79,11 +85,11 @@ abstract class GattComms extends BluetoothGattCallback {
             gatt.discoverServices();
         } else if (newState == BluetoothGatt.STATE_DISCONNECTED) {
             gatt.close();
-            mConnectState = ConnectStateEnum.STATE_DISCONNECTED;
+            changeConnectionState(ConnectStateEnum.STATE_DISCONNECTED);
         } else if (newState == BluetoothGatt.STATE_CONNECTING) {
-            mConnectState = ConnectStateEnum.STATE_CONNECTING;
+            changeConnectionState(ConnectStateEnum.STATE_CONNECTING);
         } else if (newState == BluetoothGatt.STATE_DISCONNECTING) {
-            mConnectState = ConnectStateEnum.STATE_DISCONNECTING;
+            changeConnectionState(ConnectStateEnum.STATE_DISCONNECTING);
         }
     }
 
@@ -101,7 +107,7 @@ abstract class GattComms extends BluetoothGattCallback {
         if (status == BluetoothGatt.GATT_SUCCESS) {
             mBluetoothGatt = gatt;
             isActiveDisconnect = false;
-            mConnectState = ConnectStateEnum.STATE_CONNECTED;
+            changeConnectionState(ConnectStateEnum.STATE_CONNECTED);
         } else {
             gatt.disconnect();
             gatt.close();
@@ -114,7 +120,11 @@ abstract class GattComms extends BluetoothGattCallback {
      * @return
      */
     public boolean isConnected() {
-        return mConnectState == ConnectStateEnum.STATE_CONNECTED;
+        boolean isConnected;
+        synchronized (mConnectState) {
+            isConnected = (mConnectState == ConnectStateEnum.STATE_CONNECTED);
+        }
+        return isConnected;
     }
 
     /**
@@ -229,7 +239,7 @@ abstract class GattComms extends BluetoothGattCallback {
     }
 
     void connect(BluetoothDevice bluetoothDevice, boolean autoConnect) {
-        mConnectState = ConnectStateEnum.STATE_CONNECTING;
+        changeConnectionState(ConnectStateEnum.STATE_CONNECTING);
         bluetoothDevice.connectGatt(mContext, autoConnect, this);
     }
 
@@ -314,13 +324,16 @@ abstract class GattComms extends BluetoothGattCallback {
         return false;
     }
 
-    BluetoothGatt getBluetoothGatt() {
+    /**
+     * @return
+     */
+    public BluetoothGatt getBluetoothGatt() {
         return mBluetoothGatt;
     }
 
     void disconnect() {
         isActiveDisconnect = true;
-        mConnectState = ConnectStateEnum.STATE_DISCONNECTING;
+        changeConnectionState(ConnectStateEnum.STATE_DISCONNECTING);
         mBluetoothGatt.disconnect();
         mBluetoothGatt.close();
         mBluetoothGatt = null;

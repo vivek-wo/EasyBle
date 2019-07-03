@@ -6,31 +6,30 @@ import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.content.Context;
 
-import java.util.LinkedHashMap;
+import com.vivek.wo.ble.internal.GattComms;
+import com.vivek.wo.ble.internal.GattCommsObserver;
+
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 public class BluetoothComms extends GattComms {
     private static final String TAG = "BluetoothComms";
     private BluetoothDeviceExtend bluetoothDeviceExtend;
-    private BluetoothCommObserver bluetoothCommObserver;
-    private Map<String, BluetoothMethodToken> invokedMethodTokenMaps =
-            new LinkedHashMap<>(4);
+    private GattCommsObserver gattCommsObserver;
 
     public BluetoothComms(Context context, BluetoothDeviceExtend bluetoothDeviceExtend) {
         this(context, bluetoothDeviceExtend, null);
     }
 
     public BluetoothComms(Context context, BluetoothDeviceExtend bluetoothDeviceExtend,
-                          BluetoothCommObserver observer) {
+                          GattCommsObserver observer) {
         super(context);
         this.bluetoothDeviceExtend = bluetoothDeviceExtend;
-        this.bluetoothCommObserver = observer;
+        this.gattCommsObserver = observer;
     }
 
-    public void setBluetoothCommObserver(BluetoothCommObserver bluetoothCommObserver) {
-        this.bluetoothCommObserver = bluetoothCommObserver;
+    public void setGattCommsObserver(GattCommsObserver gattCommsObserver) {
+        this.gattCommsObserver = gattCommsObserver;
     }
 
     public BluetoothDeviceExtend getBluetoothDeviceExtend() {
@@ -40,23 +39,23 @@ public class BluetoothComms extends GattComms {
     @Override
     public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
         super.onConnectionStateChange(gatt, status, newState);
-        if (mConnectState == ConnectStateEnum.STATE_DISCONNECTED) {
-            if (status == BluetoothGatt.GATT_SUCCESS) {
+//        if (mConnectState == ConnectStateEnum.STATE_DISCONNECTED) {
+//            if (status == BluetoothGatt.GATT_SUCCESS) {
                 //断开连接
-            } else {
+//            } else {
                 //连接失败
-            }
-        }
+//            }
+//        }
     }
 
     @Override
     public void onServicesDiscovered(BluetoothGatt gatt, int status) {
         super.onServicesDiscovered(gatt, status);
-        if (mConnectState == ConnectStateEnum.STATE_CONNECTED) {
+//        if (mConnectState == ConnectStateEnum.STATE_CONNECTED) {
             //连接并检索服务特征成功
-        } else {
+//        } else {
             //连接检索服务特征失败
-        }
+//        }
     }
 
     @Override
@@ -86,75 +85,35 @@ public class BluetoothComms extends GattComms {
         super.onReadRemoteRssi(gatt, rssi, status);
     }
 
-    public MethodToken connect() {
-        return new BluetoothMethodToken("connect-token", this) {
-            @Override
-            Object proxyMethod(Object... args) {
-                invokedMethodTokenMaps.put(getContextHandler(), this);
-                connect(bluetoothDeviceExtend.getBluetoothDevice(), false);
-                return true;
-            }
-        };
+    public void connect() {
     }
 
-    public MethodToken read(String serviceUUIDString, String characteristicUUIDString) {
+    public void read(String serviceUUIDString, String characteristicUUIDString) {
         BluetoothGattService gattService = getBluetoothGattService(serviceUUIDString);
         BluetoothGattCharacteristic characteristic = getBluetoothGattCharacteristic(
                 gattService, characteristicUUIDString);
-        return new BluetoothMethodToken("read-token", this) {
-            @Override
-            Object proxyMethod(Object... args) {
-                return read(this.characteristic);
-            }
-        }.setCharacteristic(characteristic);
     }
 
-    public MethodToken write(String serviceUUIDString, String characteristicUUIDString,
-                             byte[] data) {
+    public void write(String serviceUUIDString, String characteristicUUIDString,
+                      byte[] data) {
         BluetoothGattService gattService = getBluetoothGattService(serviceUUIDString);
         BluetoothGattCharacteristic characteristic = getBluetoothGattCharacteristic(
                 gattService, characteristicUUIDString);
-        return new BluetoothMethodToken("write-token", this) {
-            @Override
-            Object proxyMethod(Object... args) {
-                return write(this.characteristic, (byte[]) args[0]);
-            }
-        }.setCharacteristic(characteristic).parameterArgs(data);
     }
 
-    public MethodToken notify(String serviceUUIDString, String characteristicUUIDString,
-                              String descriptorUUIDString, boolean enable, boolean isIndication) {
+    public void notify(String serviceUUIDString, String characteristicUUIDString,
+                       String descriptorUUIDString, boolean enable, boolean isIndication) {
         BluetoothGattService gattService = getBluetoothGattService(serviceUUIDString);
         BluetoothGattCharacteristic characteristic = getBluetoothGattCharacteristic(
                 gattService, characteristicUUIDString);
         BluetoothGattDescriptor descriptor = getBluetoothGattDescriptor(
                 characteristic, descriptorUUIDString);
-        return new BluetoothMethodToken("notify-token", this) {
-            @Override
-            Object proxyMethod(Object... args) {
-                return enable(this.characteristic, this.descriptor,
-                        (boolean) args[0], (boolean) args[1]);
-            }
-        }.setCharacteristic(characteristic).setDescriptor(descriptor).parameterArgs(enable, isIndication);
     }
 
-    public MethodToken rssi() {
-        return new BluetoothMethodToken("rssi-token", this) {
-            @Override
-            Object proxyMethod(Object... args) {
-                return readRemoteRssi();
-            }
-        };
+    public void rssi() {
     }
 
-    public MethodToken disconnect(OnActionListener listener) {
-        return new BluetoothMethodToken("disconnect-token", this) {
-            @Override
-            Object proxyMethod(Object... args) {
-                disconnect();
-                return true;
-            }
-        };
+    public void disconnect(OnActionListener listener) {
     }
 
     public List<BluetoothGattService> getGattServiceList() {
