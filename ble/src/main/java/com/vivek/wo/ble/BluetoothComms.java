@@ -9,27 +9,32 @@ import android.content.Context;
 import com.vivek.wo.ble.internal.GattComms;
 import com.vivek.wo.ble.internal.GattCommsObserver;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 public class BluetoothComms extends GattComms {
     private static final String TAG = "BluetoothComms";
+    private List<GattCommsObserver> mGattCommsObserverList;
+
     private BluetoothDeviceExtend bluetoothDeviceExtend;
-    private GattCommsObserver gattCommsObserver;
+
+    public BluetoothComms(Context context) {
+        this(context, null);
+    }
 
     public BluetoothComms(Context context, BluetoothDeviceExtend bluetoothDeviceExtend) {
-        this(context, bluetoothDeviceExtend, null);
-    }
-
-    public BluetoothComms(Context context, BluetoothDeviceExtend bluetoothDeviceExtend,
-                          GattCommsObserver observer) {
         super(context);
         this.bluetoothDeviceExtend = bluetoothDeviceExtend;
-        this.gattCommsObserver = observer;
     }
 
-    public void setGattCommsObserver(GattCommsObserver gattCommsObserver) {
-        this.gattCommsObserver = gattCommsObserver;
+    public void addGattCommsObserver(GattCommsObserver gattCommsObserver) {
+        if (mGattCommsObserverList == null) {
+            mGattCommsObserverList = new ArrayList<>();
+        }
+        if (!mGattCommsObserverList.contains(gattCommsObserver)) {
+            mGattCommsObserverList.add(gattCommsObserver);
+        }
     }
 
     public BluetoothDeviceExtend getBluetoothDeviceExtend() {
@@ -41,9 +46,9 @@ public class BluetoothComms extends GattComms {
         super.onConnectionStateChange(gatt, status, newState);
 //        if (mConnectState == ConnectStateEnum.STATE_DISCONNECTED) {
 //            if (status == BluetoothGatt.GATT_SUCCESS) {
-                //断开连接
+        //断开连接
 //            } else {
-                //连接失败
+        //连接失败
 //            }
 //        }
     }
@@ -52,9 +57,9 @@ public class BluetoothComms extends GattComms {
     public void onServicesDiscovered(BluetoothGatt gatt, int status) {
         super.onServicesDiscovered(gatt, status);
 //        if (mConnectState == ConnectStateEnum.STATE_CONNECTED) {
-            //连接并检索服务特征成功
+        //连接并检索服务特征成功
 //        } else {
-            //连接检索服务特征失败
+        //连接检索服务特征失败
 //        }
     }
 

@@ -1,4 +1,6 @@
-package com.vivek.wo.ble;
+package com.vivek.wo.ble.scan;
+
+import com.vivek.wo.ble.BluetoothDeviceExtend;
 
 import java.util.List;
 

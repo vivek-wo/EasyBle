@@ -6,6 +6,9 @@ import android.content.Context;
 
 import com.vivek.wo.ble.internal.BluetoothException;
 import com.vivek.wo.ble.internal.GattCommsObserver;
+import com.vivek.wo.ble.scan.OnScanCallback;
+import com.vivek.wo.ble.scan.ScanCallback;
+import com.vivek.wo.ble.scan.SingleFilterScanCallback;
 
 import java.util.List;
 

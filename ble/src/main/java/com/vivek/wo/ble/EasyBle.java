@@ -14,6 +14,9 @@ import android.content.pm.PackageManager;
 
 import com.vivek.wo.ble.internal.BluetoothException;
 import com.vivek.wo.ble.internal.GattCommsObserver;
+import com.vivek.wo.ble.scan.OnScanCallback;
+import com.vivek.wo.ble.scan.ScanCallback;
+import com.vivek.wo.ble.scan.SingleFilterScanCallback;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -319,7 +322,6 @@ public class EasyBle {
     public void setBluetoothCommObserver(String deviceAddress, GattCommsObserver commObserver)
             throws BluetoothException {
         BluetoothComms comms = mConnectedDeviceExtendMap.get(deviceAddress);
-        comms.setGattCommsObserver(commObserver);
     }
 
     /**
@@ -379,6 +381,23 @@ public class EasyBle {
             String deviceAddress, BluetoothGattCharacteristic gattCharacteristic) throws BluetoothException {
         BluetoothComms comms = mConnectedDeviceExtendMap.get(deviceAddress);
         return null;
+    }
+
+    public interface BluetoothStateObserver {
+
+        /**
+         * 蓝牙状态改变监听
+         *
+         * <p>
+         * {@link android.bluetooth.BluetoothAdapter#STATE_OFF},
+         * {@link android.bluetooth.BluetoothAdapter#STATE_ON},
+         * {@link android.bluetooth.BluetoothAdapter#STATE_TURNING_OFF},
+         * {@link android.bluetooth.BluetoothAdapter#STATE_TURNING_ON}
+         * </P>
+         *
+         * @param state
+         */
+        void onStateChanged(int state);
     }
 
 }

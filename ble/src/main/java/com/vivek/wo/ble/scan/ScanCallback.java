@@ -1,4 +1,4 @@
-package com.vivek.wo.ble;
+package com.vivek.wo.ble.scan;
 
 import android.annotation.TargetApi;
 import android.bluetooth.BluetoothAdapter;
@@ -11,6 +11,8 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.support.annotation.RequiresApi;
+
+import com.vivek.wo.ble.BluetoothDeviceExtend;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
