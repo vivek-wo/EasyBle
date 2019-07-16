@@ -11,6 +11,8 @@ import android.os.Build;
 import android.support.annotation.RequiresApi;
 
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 public abstract class GattComms extends BluetoothGattCallback {
@@ -21,8 +23,10 @@ public abstract class GattComms extends BluetoothGattCallback {
     private Context mContext;
     private boolean isActiveDisconnect = false;//是否主动断开连接
     private volatile ConnectStateEnum mConnectState = ConnectStateEnum.STATE_NOTCONNECT;//连接状态
+    private List<GattCommsObserver> mGattCommsObservers = new ArrayList<>(1);
 
     protected BluetoothGatt mBluetoothGatt; //提供子类使用
+
 
     enum ConnectStateEnum {
         /**
@@ -86,6 +90,8 @@ public abstract class GattComms extends BluetoothGattCallback {
         } else if (newState == BluetoothGatt.STATE_DISCONNECTED) {
             gatt.close();
             changeConnectionState(ConnectStateEnum.STATE_DISCONNECTED);
+            observeGattCommsConnectFailure(status, new BluetoothException(status,
+                    "onConnectionStateChange State Disconnected " + status));
         } else if (newState == BluetoothGatt.STATE_CONNECTING) {
             changeConnectionState(ConnectStateEnum.STATE_CONNECTING);
         } else if (newState == BluetoothGatt.STATE_DISCONNECTING) {
@@ -108,9 +114,50 @@ public abstract class GattComms extends BluetoothGattCallback {
             mBluetoothGatt = gatt;
             isActiveDisconnect = false;
             changeConnectionState(ConnectStateEnum.STATE_CONNECTED);
+            observeGattCommsConnectComplete();
         } else {
             gatt.disconnect();
             gatt.close();
+            observeGattCommsConnectFailure(status, new BluetoothException(status,
+                    "onServicesDiscovered Failure " + status));
+        }
+    }
+
+    /**
+     * @param observer
+     */
+    public void addGattCommsObserver(GattCommsObserver observer) {
+        synchronized (mGattCommsObservers) {
+            if (!mGattCommsObservers.contains(observer)) {
+                mGattCommsObservers.add(observer);
+            }
+        }
+    }
+
+    /**
+     * @param observer
+     */
+    public void removeGattCommsObserver(GattCommsObserver observer) {
+        synchronized (mGattCommsObservers) {
+            if (mGattCommsObservers != null && mGattCommsObservers.contains(observer)) {
+                mGattCommsObservers.remove(observer);
+            }
+        }
+    }
+
+    private void observeGattCommsConnectComplete() {
+        synchronized (mGattCommsObservers) {
+            for (GattCommsObserver observer : mGattCommsObservers) {
+                observer.connectComplete();
+            }
+        }
+    }
+
+    private void observeGattCommsConnectFailure(int status, BluetoothException e) {
+        synchronized (mGattCommsObservers) {
+            for (GattCommsObserver observer : mGattCommsObservers) {
+                observer.connectComplete();
+            }
         }
     }
 

@@ -10,8 +10,8 @@ public interface GattCommsObserver {
     /**
      * 连接断开
      *
-     * @param throwable
+     * @param e
      */
-    void connectLost(Throwable throwable);
+    void connectLost(BluetoothException e);
 
 }
