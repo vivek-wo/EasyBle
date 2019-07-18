@@ -3,7 +3,6 @@ package com.vivek.wo.ble.internal;
 public class BluetoothException extends RuntimeException {
 
 //    public static final int BLUETOOTH_REMOTEDEVICE_NOIFOUND = -1;//远程设备无法找到
-
 //    public static final int BLUETOOTH_REMOTEDEVICE_NOICONNECTED = -2;//远程设备未连接
 
     private int reasonCode;

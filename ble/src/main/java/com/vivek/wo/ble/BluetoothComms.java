@@ -7,16 +7,12 @@ import android.bluetooth.BluetoothGattService;
 import android.content.Context;
 
 import com.vivek.wo.ble.internal.GattComms;
-import com.vivek.wo.ble.internal.GattCommsObserver;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 public class BluetoothComms extends GattComms {
     private static final String TAG = "BluetoothComms";
-    private List<GattCommsObserver> mGattCommsObserverList;
-
     private BluetoothDeviceExtend bluetoothDeviceExtend;
 
     public BluetoothComms(Context context) {
@@ -26,15 +22,6 @@ public class BluetoothComms extends GattComms {
     public BluetoothComms(Context context, BluetoothDeviceExtend bluetoothDeviceExtend) {
         super(context);
         this.bluetoothDeviceExtend = bluetoothDeviceExtend;
-    }
-
-    public void addGattCommsObserver(GattCommsObserver gattCommsObserver) {
-        if (mGattCommsObserverList == null) {
-            mGattCommsObserverList = new ArrayList<>();
-        }
-        if (!mGattCommsObserverList.contains(gattCommsObserver)) {
-            mGattCommsObserverList.add(gattCommsObserver);
-        }
     }
 
     public BluetoothDeviceExtend getBluetoothDeviceExtend() {
@@ -91,6 +78,12 @@ public class BluetoothComms extends GattComms {
     }
 
     public void connect() {
+        connect(null);
+    }
+
+    public void connect(OnActionListener listener) {
+
+        connect(bluetoothDeviceExtend.getBluetoothDevice(), false);
     }
 
     public void read(String serviceUUIDString, String characteristicUUIDString) {
