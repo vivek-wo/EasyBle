@@ -235,6 +235,7 @@ public class EasyBle {
      */
     public void disconnect(String deviceAddress) throws BluetoothException {
         BluetoothComms comms = mConnectedDeviceExtendMap.get(deviceAddress);
+        comms.createConnectToken().connect();
     }
 
     /**

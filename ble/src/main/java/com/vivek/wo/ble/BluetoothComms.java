@@ -7,6 +7,7 @@ import android.bluetooth.BluetoothGattService;
 import android.content.Context;
 
 import com.vivek.wo.ble.internal.GattComms;
+import com.vivek.wo.ble.token.ConnectToken;
 
 import java.util.List;
 import java.util.UUID;
@@ -77,13 +78,15 @@ public class BluetoothComms extends GattComms {
         super.onReadRemoteRssi(gatt, rssi, status);
     }
 
-    public void connect() {
-        connect(null);
-    }
-
-    public void connect(OnActionListener listener) {
-
-        connect(bluetoothDeviceExtend.getBluetoothDevice(), false);
+    public ConnectToken createConnectToken() {
+        ConnectToken token = new ConnectToken() {
+            @Override
+            public Object invoke() {
+                innerConnect(bluetoothDeviceExtend.getBluetoothDevice(), false);
+                return null;
+            }
+        };
+        return token;
     }
 
     public void read(String serviceUUIDString, String characteristicUUIDString) {
