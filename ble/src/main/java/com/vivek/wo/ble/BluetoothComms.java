@@ -6,15 +6,20 @@ import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.content.Context;
 
+import com.vivek.wo.ble.internal.BluetoothException;
 import com.vivek.wo.ble.internal.GattComms;
 import com.vivek.wo.ble.token.ConnectToken;
+import com.vivek.wo.ble.token.Token;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 public class BluetoothComms extends GattComms {
     private static final String TAG = "BluetoothComms";
     private BluetoothDeviceExtend bluetoothDeviceExtend;
+    private Map<Class<? extends Token>, Token> mTokenMap = new HashMap<>();
 
     public BluetoothComms(Context context) {
         this(context, null);
@@ -29,26 +34,48 @@ public class BluetoothComms extends GattComms {
         return bluetoothDeviceExtend;
     }
 
+    private void putBluetoothOperationToken(Class<? extends Token> cls, Token token) {
+
+    }
+
+    private Token removeBluetoothOperationToken(Class<? extends Token> cls) {
+        Token token = null;
+        return token;
+    }
+
     @Override
     public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
         super.onConnectionStateChange(gatt, status, newState);
-//        if (mConnectState == ConnectStateEnum.STATE_DISCONNECTED) {
-//            if (status == BluetoothGatt.GATT_SUCCESS) {
-        //断开连接
-//            } else {
-        //连接失败
-//            }
-//        }
+        if (newState == BluetoothGatt.STATE_DISCONNECTED) {
+            if (isDisconnected()) {
+//        断开连接
+            } else {
+//        连接失败
+                ConnectToken connectToken = (ConnectToken) mTokenMap.remove(ConnectToken.class);
+                if (connectToken == null) {
+                    return;
+                }
+                connectToken.callback(false, new BluetoothException(status,
+                        "Connect callback failure! "));
+            }
+        }
     }
 
     @Override
     public void onServicesDiscovered(BluetoothGatt gatt, int status) {
         super.onServicesDiscovered(gatt, status);
-//        if (mConnectState == ConnectStateEnum.STATE_CONNECTED) {
-        //连接并检索服务特征成功
-//        } else {
-        //连接检索服务特征失败
-//        }
+        ConnectToken connectToken = (ConnectToken) mTokenMap.remove(ConnectToken.class);
+        if (connectToken == null) {
+            return;
+        }
+        if (status == BluetoothGatt.GATT_SUCCESS) {
+//        连接并检索服务特征成功
+            connectToken.callback(true, null);
+        } else {
+//        连接检索服务特征失败
+            connectToken.callback(false, new BluetoothException(status,
+                    "Connect callback discovered services failure! "));
+        }
     }
 
     @Override
@@ -79,14 +106,18 @@ public class BluetoothComms extends GattComms {
     }
 
     public ConnectToken createConnectToken() {
-        ConnectToken token = new ConnectToken() {
+        ConnectToken connectToken = new ConnectToken() {
             @Override
             public Object invoke() {
+                if (mTokenMap.containsKey(ConnectToken.class)) {
+                    //已存在连接操作
+                }
+                putBluetoothOperationToken(ConnectToken.class, this);
                 innerConnect(bluetoothDeviceExtend.getBluetoothDevice(), false);
                 return null;
             }
         };
-        return token;
+        return connectToken;
     }
 
     public void read(String serviceUUIDString, String characteristicUUIDString) {

@@ -88,8 +88,12 @@ public abstract class GattComms extends BluetoothGattCallback {
         if (newState == BluetoothGatt.STATE_CONNECTED) {
             gatt.discoverServices();
         } else if (newState == BluetoothGatt.STATE_DISCONNECTED) {
+            if (isConnected()) {
+                changeConnectionState(ConnectStateEnum.STATE_DISCONNECTED);
+            } else {
+                changeConnectionState(ConnectStateEnum.STATE_NOTCONNECT);
+            }
             gatt.close();
-            changeConnectionState(ConnectStateEnum.STATE_DISCONNECTED);
             observeGattCommsConnectFailure(status, new BluetoothException(status,
                     "onConnectionStateChange State Disconnected " + status));
         } else if (newState == BluetoothGatt.STATE_CONNECTING) {
@@ -124,6 +128,8 @@ public abstract class GattComms extends BluetoothGattCallback {
     }
 
     /**
+     * 添加蓝牙连接监听
+     *
      * @param observer
      */
     public void addGattCommsObserver(GattCommsObserver observer) {
@@ -135,6 +141,8 @@ public abstract class GattComms extends BluetoothGattCallback {
     }
 
     /**
+     * 移除蓝牙连接监听
+     *
      * @param observer
      */
     public void removeGattCommsObserver(GattCommsObserver observer) {
@@ -156,7 +164,7 @@ public abstract class GattComms extends BluetoothGattCallback {
     private void observeGattCommsConnectFailure(int status, BluetoothException e) {
         synchronized (mGattCommsObservers) {
             for (GattCommsObserver observer : mGattCommsObservers) {
-                observer.connectComplete();
+                observer.connectLost(e);
             }
         }
     }
@@ -172,6 +180,17 @@ public abstract class GattComms extends BluetoothGattCallback {
             isConnected = (mConnectState == ConnectStateEnum.STATE_CONNECTED);
         }
         return isConnected;
+    }
+
+    /**
+     * @return
+     */
+    public boolean isDisconnected() {
+        boolean isDisconnected;
+        synchronized (mConnectState) {
+            isDisconnected = (mConnectState == ConnectStateEnum.STATE_DISCONNECTED);
+        }
+        return isDisconnected;
     }
 
     /**
