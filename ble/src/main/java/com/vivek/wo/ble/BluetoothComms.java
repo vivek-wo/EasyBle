@@ -9,7 +9,9 @@ import android.content.Context;
 import com.vivek.wo.ble.internal.BluetoothException;
 import com.vivek.wo.ble.internal.GattComms;
 import com.vivek.wo.ble.token.ConnectToken;
+import com.vivek.wo.ble.token.ReadToken;
 import com.vivek.wo.ble.token.Token;
+import com.vivek.wo.ble.token.WriteToken;
 
 import java.util.HashMap;
 import java.util.List;
@@ -35,12 +37,17 @@ public class BluetoothComms extends GattComms {
     }
 
     private void putBluetoothOperationToken(Class<? extends Token> cls, Token token) {
-
+        mTokenMap.put(cls, token);
     }
 
     private Token removeBluetoothOperationToken(Class<? extends Token> cls) {
-        Token token = null;
+        Token token;
+        token = mTokenMap.remove(cls);
         return token;
+    }
+
+    private boolean isExistedBluetoothOperationToken(Class<? extends Token> cls) {
+        return mTokenMap.containsKey(cls);
     }
 
     @Override
@@ -51,11 +58,12 @@ public class BluetoothComms extends GattComms {
 //        断开连接
             } else {
 //        连接失败
-                ConnectToken connectToken = (ConnectToken) mTokenMap.remove(ConnectToken.class);
+                ConnectToken connectToken = (ConnectToken) removeBluetoothOperationToken(
+                        ConnectToken.class);
                 if (connectToken == null) {
                     return;
                 }
-                connectToken.callback(false, new BluetoothException(status,
+                connectToken.callback(new BluetoothException(status,
                         "Connect callback failure! "));
             }
         }
@@ -64,16 +72,16 @@ public class BluetoothComms extends GattComms {
     @Override
     public void onServicesDiscovered(BluetoothGatt gatt, int status) {
         super.onServicesDiscovered(gatt, status);
-        ConnectToken connectToken = (ConnectToken) mTokenMap.remove(ConnectToken.class);
+        ConnectToken connectToken = (ConnectToken) removeBluetoothOperationToken(ConnectToken.class);
         if (connectToken == null) {
             return;
         }
         if (status == BluetoothGatt.GATT_SUCCESS) {
 //        连接并检索服务特征成功
-            connectToken.callback(true, null);
+            connectToken.callback(null);
         } else {
 //        连接检索服务特征失败
-            connectToken.callback(false, new BluetoothException(status,
+            connectToken.callback(new BluetoothException(status,
                     "Connect callback discovered services failure! "));
         }
     }
@@ -82,9 +90,17 @@ public class BluetoothComms extends GattComms {
     public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
         super.onCharacteristicRead(gatt, characteristic, status);
         byte[] data = null;
-        if (status == BluetoothGatt.GATT_FAILURE) {
+        ReadToken readToken = (ReadToken) removeBluetoothOperationToken(ReadToken.class);
+        if (readToken == null) {
+            return;
+        }
+        if (status == BluetoothGatt.GATT_SUCCESS) {
             //读回调
             data = characteristic.getValue();
+            readToken.callback(null, data, characteristic.getUuid().toString());
+        } else {
+            readToken.callback(new BluetoothException(status, "Read callback failure! "),
+                    null, null);
         }
     }
 
@@ -93,6 +109,19 @@ public class BluetoothComms extends GattComms {
                                       BluetoothGattCharacteristic characteristic, int status) {
         super.onCharacteristicWrite(gatt, characteristic, status);
         //写回调
+        byte[] data = null;
+        WriteToken writeToken = (WriteToken) removeBluetoothOperationToken(WriteToken.class);
+        if (writeToken == null) {
+            return;
+        }
+        if (status == BluetoothGatt.GATT_SUCCESS) {
+            //读回调
+            data = characteristic.getValue();
+            writeToken.callback(null, data, characteristic.getUuid().toString());
+        } else {
+            writeToken.callback(new BluetoothException(status, "Write callback failure! "),
+                    null, null);
+        }
     }
 
     @Override
@@ -107,39 +136,99 @@ public class BluetoothComms extends GattComms {
 
     public ConnectToken createConnectToken() {
         ConnectToken connectToken = new ConnectToken() {
+
             @Override
-            public Object invoke() {
-                if (mTokenMap.containsKey(ConnectToken.class)) {
+            protected boolean onRequestPrepared() {
+                if (isExistedBluetoothOperationToken(ConnectToken.class)) {
                     //已存在连接操作
+                    return false;
                 }
                 putBluetoothOperationToken(ConnectToken.class, this);
+                return super.onRequestPrepared();
+            }
+
+            @Override
+            public Object invoke() {
                 innerConnect(bluetoothDeviceExtend.getBluetoothDevice(), false);
                 return null;
+            }
+
+            @Override
+            protected void onRequestFinished(boolean isTimeout) {
+                super.onRequestFinished(isTimeout);
+                if (isTimeout) {
+                    innerDisconnect();
+                }
+                removeBluetoothOperationToken(ConnectToken.class);
             }
         };
         return connectToken;
     }
 
-    public void read(String serviceUUIDString, String characteristicUUIDString) {
-        BluetoothGattService gattService = getBluetoothGattService(serviceUUIDString);
-        BluetoothGattCharacteristic characteristic = getBluetoothGattCharacteristic(
-                gattService, characteristicUUIDString);
+    public ReadToken createReadToken(String serviceUuid, String characteristicUuid) {
+        BluetoothGattService gattService = getBluetoothGattService(serviceUuid);
+        final BluetoothGattCharacteristic characteristic = getBluetoothGattCharacteristic(
+                gattService, characteristicUuid);
+        ReadToken readToken = new ReadToken() {
+            @Override
+            protected boolean onRequestPrepared() {
+                if (isExistedBluetoothOperationToken(ReadToken.class)) {
+                    return false;
+                }
+                putBluetoothOperationToken(ReadToken.class, this);
+                return super.onRequestPrepared();
+            }
+
+            @Override
+            protected Object invoke() {
+                return innerRead(characteristic);
+            }
+
+            @Override
+            protected void onRequestFinished(boolean isTimeout) {
+                super.onRequestFinished(isTimeout);
+                removeBluetoothOperationToken(ConnectToken.class);
+            }
+        };
+        return readToken;
     }
 
-    public void write(String serviceUUIDString, String characteristicUUIDString,
-                      byte[] data) {
-        BluetoothGattService gattService = getBluetoothGattService(serviceUUIDString);
+    public WriteToken createWriteToken(String serviceUuid, String characteristicUuid,
+                                       byte[] data) {
+        BluetoothGattService gattService = getBluetoothGattService(serviceUuid);
         BluetoothGattCharacteristic characteristic = getBluetoothGattCharacteristic(
-                gattService, characteristicUUIDString);
+                gattService, characteristicUuid);
+        WriteToken writeToken = new WriteToken(characteristic, data) {
+            @Override
+            protected boolean onRequestPrepared() {
+                if (isExistedBluetoothOperationToken(WriteToken.class)) {
+                    return false;
+                }
+                putBluetoothOperationToken(WriteToken.class, this);
+                return super.onRequestPrepared();
+            }
+
+            @Override
+            protected Object invoke() {
+                return innerWrite(characteristic, data);
+            }
+
+            @Override
+            protected void onRequestFinished(boolean isTimeout) {
+                super.onRequestFinished(isTimeout);
+                removeBluetoothOperationToken(WriteToken.class);
+            }
+        };
+        return writeToken;
     }
 
-    public void notify(String serviceUUIDString, String characteristicUUIDString,
-                       String descriptorUUIDString, boolean enable, boolean isIndication) {
-        BluetoothGattService gattService = getBluetoothGattService(serviceUUIDString);
+    public void createNotifyToken(String serviceUuid, String characteristicUuid,
+                                  String descriptorUuid, boolean enable, boolean isIndication) {
+        BluetoothGattService gattService = getBluetoothGattService(serviceUuid);
         BluetoothGattCharacteristic characteristic = getBluetoothGattCharacteristic(
-                gattService, characteristicUUIDString);
+                gattService, characteristicUuid);
         BluetoothGattDescriptor descriptor = getBluetoothGattDescriptor(
-                characteristic, descriptorUUIDString);
+                characteristic, descriptorUuid);
     }
 
     public void rssi() {
@@ -162,18 +251,18 @@ public class BluetoothComms extends GattComms {
         return gattCharacteristic.getDescriptors();
     }
 
-    private BluetoothGattService getBluetoothGattService(String serviceUUIDString) {
-        return getBluetoothGatt().getService(UUID.fromString(serviceUUIDString));
+    private BluetoothGattService getBluetoothGattService(String serviceUuid) {
+        return getBluetoothGatt().getService(UUID.fromString(serviceUuid));
     }
 
     private BluetoothGattCharacteristic getBluetoothGattCharacteristic(
-            BluetoothGattService service, String characteristicUUIDString) {
-        return service.getCharacteristic(UUID.fromString(characteristicUUIDString));
+            BluetoothGattService service, String characteristicUuid) {
+        return service.getCharacteristic(UUID.fromString(characteristicUuid));
     }
 
     private BluetoothGattDescriptor getBluetoothGattDescriptor(
-            BluetoothGattCharacteristic characteristic, String descriptorUUIDString) {
-        return characteristic.getDescriptor(UUID.fromString(descriptorUUIDString));
+            BluetoothGattCharacteristic characteristic, String descriptorUuid) {
+        return characteristic.getDescriptor(UUID.fromString(descriptorUuid));
     }
 
 }

@@ -4,6 +4,7 @@ import android.os.Handler;
 import android.os.Looper;
 
 import com.vivek.wo.ble.OnActionListener;
+import com.vivek.wo.ble.internal.BluetoothException;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -14,11 +15,21 @@ public abstract class Token implements Runnable {
     protected OnActionListener onActionListener;
 
     public Token() {
-
+        this(null);
     }
 
     public Token(Handler handler) {
         mHandler = handler;
+    }
+
+    /**
+     * 蓝牙请求前方法
+     *
+     * @return
+     */
+    protected boolean onRequestPrepared() {
+        addTimeoutTask();
+        return true;
     }
 
     /**
@@ -28,6 +39,29 @@ public abstract class Token implements Runnable {
      */
     protected abstract Object invoke();
 
+    /**
+     * 蓝牙请求完成方法
+     *
+     * @param isTimeout
+     */
+    protected void onRequestFinished(boolean isTimeout) {
+        if (!isTimeout) {
+            removeTimeoutTask();
+        }
+    }
+
+    /**
+     * 是否第一次进入超时或者回调
+     *
+     * @return
+     */
+    protected boolean isFirstTimeoutOrCallback() {
+        return isTimeoutCallback.compareAndSet(false, true);
+    }
+
+    /**
+     * 添加超时任务
+     */
     void addTimeoutTask() {
         if (timeout > 0) {
             if (mHandler == null) {
@@ -37,9 +71,50 @@ public abstract class Token implements Runnable {
         }
     }
 
+    /**
+     * 移除超时任务
+     */
     void removeTimeoutTask() {
-        if (mHandler != null) {
+        if (timeout > 0 && mHandler != null) {
             mHandler.removeCallbacks(this);
+        }
+    }
+
+    /**
+     * 蓝牙请求回调
+     *
+     * @param exception
+     * @param args
+     */
+    protected void callbackRequest(BluetoothException exception, Object... args) {
+        //回调
+        if (isFirstTimeoutOrCallback()) {
+            onRequestFinished(false);
+            if (this.onActionListener == null) {
+                return;
+            }
+            if (exception == null) {
+                this.onActionListener.onSuccess(args);
+            } else {
+                this.onActionListener.onFailure(exception);
+            }
+        }
+    }
+
+    /**
+     * 蓝牙请求超时
+     *
+     * @param requestTag
+     */
+    protected void callbackTimeout(String requestTag) {
+        //超时
+        if (isFirstTimeoutOrCallback()) {
+            onRequestFinished(true);
+            if (this.onActionListener == null) {
+                return;
+            }
+            this.onActionListener.onFailure(new BluetoothException(
+                    BluetoothException.BLUETOOTH_CALLBACK_TIMEOUT, requestTag + "callback timeout! "));
         }
     }
 }

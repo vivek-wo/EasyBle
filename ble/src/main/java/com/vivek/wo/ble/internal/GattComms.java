@@ -85,6 +85,7 @@ public abstract class GattComms extends BluetoothGattCallback {
     @Override
     public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
         super.onConnectionStateChange(gatt, status, newState);
+        mBluetoothGatt = gatt;
         if (newState == BluetoothGatt.STATE_CONNECTED) {
             gatt.discoverServices();
         } else if (newState == BluetoothGatt.STATE_DISCONNECTED) {
@@ -93,6 +94,7 @@ public abstract class GattComms extends BluetoothGattCallback {
             } else {
                 changeConnectionState(ConnectStateEnum.STATE_NOTCONNECT);
             }
+            refreshDeviceCache();
             gatt.close();
             observeGattCommsConnectFailure(status, new BluetoothException(status,
                     "onConnectionStateChange State Disconnected " + status));
@@ -114,13 +116,14 @@ public abstract class GattComms extends BluetoothGattCallback {
     @Override
     public void onServicesDiscovered(BluetoothGatt gatt, int status) {
         super.onServicesDiscovered(gatt, status);
+        mBluetoothGatt = gatt;
         if (status == BluetoothGatt.GATT_SUCCESS) {
-            mBluetoothGatt = gatt;
             isActiveDisconnect = false;
             changeConnectionState(ConnectStateEnum.STATE_CONNECTED);
             observeGattCommsConnectComplete();
         } else {
             gatt.disconnect();
+            refreshDeviceCache();
             gatt.close();
             observeGattCommsConnectFailure(status, new BluetoothException(status,
                     "onServicesDiscovered Failure " + status));
@@ -309,45 +312,33 @@ public abstract class GattComms extends BluetoothGattCallback {
         bluetoothDevice.connectGatt(mContext, autoConnect, this);
     }
 
-    boolean read(BluetoothGattCharacteristic characteristic) {
+    protected boolean innerRead(BluetoothGattCharacteristic characteristic) {
         checkCharacteristicNULL(characteristic);
         return mBluetoothGatt.readCharacteristic(characteristic);
-    }
-
-    boolean write(BluetoothGattCharacteristic characteristic, byte[] data) {
-        checkCharacteristicNULL(characteristic);
-        characteristic.setValue(data);
-        return mBluetoothGatt.writeCharacteristic(characteristic);
     }
 
     /**
      * @param characteristic
      * @param data
-     * @param writeType      The write type to for this characteristic. Can be one
-     *                       of:
-     *                       {@link BluetoothGattCharacteristic#WRITE_TYPE_DEFAULT},
-     *                       {@link BluetoothGattCharacteristic#WRITE_TYPE_NO_RESPONSE} or
-     *                       {@link BluetoothGattCharacteristic#WRITE_TYPE_SIGNED}.
      * @return
      */
-    boolean write(BluetoothGattCharacteristic characteristic, byte[] data, int writeType) {
+    protected boolean innerWrite(BluetoothGattCharacteristic characteristic, byte[] data) {
         checkCharacteristicNULL(characteristic);
-        characteristic.setWriteType(writeType);
         characteristic.setValue(data);
         return mBluetoothGatt.writeCharacteristic(characteristic);
     }
 
-    boolean readRemoteRssi() {
+    protected boolean readRemoteRssi() {
         return mBluetoothGatt.readRemoteRssi();
     }
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-    boolean setMTU(int mtu) {
+    protected boolean setMTU(int mtu) {
         return mBluetoothGatt.requestMtu(mtu);
     }
 
-    boolean enable(BluetoothGattCharacteristic characteristic,
-                   BluetoothGattDescriptor descriptor, boolean enable, boolean isIndication) {
+    protected boolean enable(BluetoothGattCharacteristic characteristic,
+                             BluetoothGattDescriptor descriptor, boolean enable, boolean isIndication) {
         checkCharacteristicNULL(characteristic);
         boolean result = mBluetoothGatt.setCharacteristicNotification(characteristic, enable);
         if (!result) {
@@ -377,7 +368,7 @@ public abstract class GattComms extends BluetoothGattCallback {
         return true;
     }
 
-    boolean refreshDeviceCache() {
+    protected boolean refreshDeviceCache() {
         try {
             final Method refresh = BluetoothGatt.class.getMethod("refresh");
             if (refresh != null && mBluetoothGatt != null) {
@@ -397,11 +388,18 @@ public abstract class GattComms extends BluetoothGattCallback {
         return mBluetoothGatt;
     }
 
-    void disconnect() {
+    protected void innerDisconnect() {
+        if (mBluetoothGatt != null) {
+            mBluetoothGatt.disconnect();
+            refreshDeviceCache();
+            mBluetoothGatt.close();
+        }
+    }
+
+    public void disconnect() {
         isActiveDisconnect = true;
         changeConnectionState(ConnectStateEnum.STATE_DISCONNECTING);
-        mBluetoothGatt.disconnect();
-        mBluetoothGatt.close();
+        innerDisconnect();
         mBluetoothGatt = null;
     }
 
