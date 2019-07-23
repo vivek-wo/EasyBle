@@ -13,14 +13,13 @@ public abstract class WriteToken extends Token {
     protected BluetoothGattCharacteristic characteristic;
     protected byte[] data;
 
-    public WriteToken(BluetoothGattCharacteristic characteristic, byte[] data) {
-        this(null, characteristic, data);
+    public WriteToken(BluetoothGattCharacteristic characteristic) {
+        this(null, characteristic);
     }
 
-    public WriteToken(Handler handler, BluetoothGattCharacteristic characteristic, byte[] data) {
+    public WriteToken(Handler handler, BluetoothGattCharacteristic characteristic) {
         super(handler);
         this.characteristic = characteristic;
-        this.data = data;
     }
 
     public WriteToken setTimeout(int timeout) {
@@ -50,11 +49,16 @@ public abstract class WriteToken extends Token {
         return this;
     }
 
-    public void write() {
-        boolean isPrepared = onRequestPrepared();
-        if (isPrepared) {
-            invoke();
+    @Override
+    protected boolean onRequestPrepared() {
+        if (isWriteTypeNoResponse()) {
+            return true;
         }
+        return super.onRequestPrepared();
+    }
+
+    private boolean isWriteTypeNoResponse() {
+        return this.characteristic.getWriteType() == WRITE_TYPE_NO_RESPONSE;
     }
 
     public void write(byte[] data) {
@@ -62,11 +66,18 @@ public abstract class WriteToken extends Token {
         boolean isPrepared = onRequestPrepared();
         if (isPrepared) {
             invoke();
+            if (isWriteTypeNoResponse()) {
+                onRequestFinished(false);
+            }
         }
     }
 
-    private void resetRequest() {
-
+    @Override
+    protected void onRequestFinished(boolean isTimeout) {
+        if (isWriteTypeNoResponse()) {
+            return;
+        }
+        super.onRequestFinished(isTimeout);
     }
 
     public void callback(BluetoothException exception, byte[] data, String characteristicUuid) {

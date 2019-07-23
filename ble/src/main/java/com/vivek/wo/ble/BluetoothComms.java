@@ -115,7 +115,6 @@ public class BluetoothComms extends GattComms {
             return;
         }
         if (status == BluetoothGatt.GATT_SUCCESS) {
-            //读回调
             data = characteristic.getValue();
             writeToken.callback(null, data, characteristic.getUuid().toString());
         } else {
@@ -193,12 +192,11 @@ public class BluetoothComms extends GattComms {
         return readToken;
     }
 
-    public WriteToken createWriteToken(String serviceUuid, String characteristicUuid,
-                                       byte[] data) {
+    public WriteToken createWriteToken(String serviceUuid, String characteristicUuid) {
         BluetoothGattService gattService = getBluetoothGattService(serviceUuid);
         BluetoothGattCharacteristic characteristic = getBluetoothGattCharacteristic(
                 gattService, characteristicUuid);
-        WriteToken writeToken = new WriteToken(characteristic, data) {
+        WriteToken writeToken = new WriteToken(characteristic) {
             @Override
             protected boolean onRequestPrepared() {
                 if (isExistedBluetoothOperationToken(WriteToken.class)) {
