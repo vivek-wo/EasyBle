@@ -5,11 +5,17 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.content.Context;
+import android.os.Build;
+import android.support.annotation.RequiresApi;
 
 import com.vivek.wo.ble.internal.BluetoothException;
 import com.vivek.wo.ble.internal.GattComms;
 import com.vivek.wo.ble.token.ConnectToken;
+import com.vivek.wo.ble.token.DisconnectToken;
+import com.vivek.wo.ble.token.MTUToken;
+import com.vivek.wo.ble.token.NotifyToken;
 import com.vivek.wo.ble.token.ReadToken;
+import com.vivek.wo.ble.token.RssiToken;
 import com.vivek.wo.ble.token.Token;
 import com.vivek.wo.ble.token.WriteToken;
 
@@ -126,11 +132,46 @@ public class BluetoothComms extends GattComms {
     @Override
     public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
         super.onDescriptorWrite(gatt, descriptor, status);
+        NotifyToken notifyToken = (NotifyToken) removeBluetoothOperationToken(NotifyToken.class);
+        if (notifyToken == null) {
+            return;
+        }
+        if (status == BluetoothGatt.GATT_SUCCESS) {
+            notifyToken.callback(null, descriptor.getCharacteristic().getUuid().toString());
+        } else {
+            notifyToken.callback(new BluetoothException(status, "Notify callback failure! "),
+                    null);
+        }
     }
 
     @Override
     public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status) {
         super.onReadRemoteRssi(gatt, rssi, status);
+        RssiToken rssiToken = (RssiToken) removeBluetoothOperationToken(RssiToken.class);
+        if (rssiToken == null) {
+            return;
+        }
+        if (status == BluetoothGatt.GATT_SUCCESS) {
+            rssiToken.callback(null, rssi);
+        } else {
+            rssiToken.callback(new BluetoothException(status, "ReadRssi callback failure! "),
+                    0);
+        }
+    }
+
+    @Override
+    public void onMtuChanged(BluetoothGatt gatt, int mtu, int status) {
+        super.onMtuChanged(gatt, mtu, status);
+        MTUToken mtuToken = (MTUToken) removeBluetoothOperationToken(MTUToken.class);
+        if (mtuToken == null) {
+            return;
+        }
+        if (status == BluetoothGatt.GATT_SUCCESS) {
+            mtuToken.callback(null, mtu);
+        } else {
+            mtuToken.callback(new BluetoothException(status, "RequestMTU callback failure! "),
+                    0);
+        }
     }
 
     public ConnectToken createConnectToken() {
@@ -186,7 +227,7 @@ public class BluetoothComms extends GattComms {
             @Override
             protected void onRequestFinished(boolean isTimeout) {
                 super.onRequestFinished(isTimeout);
-                removeBluetoothOperationToken(ConnectToken.class);
+                removeBluetoothOperationToken(ReadToken.class);
             }
         };
         return readToken;
@@ -220,19 +261,112 @@ public class BluetoothComms extends GattComms {
         return writeToken;
     }
 
-    public void createNotifyToken(String serviceUuid, String characteristicUuid,
-                                  String descriptorUuid, boolean enable, boolean isIndication) {
+    public NotifyToken createNotifyToken(String serviceUuid, String characteristicUuid,
+                                         String descriptorUuid) {
         BluetoothGattService gattService = getBluetoothGattService(serviceUuid);
-        BluetoothGattCharacteristic characteristic = getBluetoothGattCharacteristic(
+        final BluetoothGattCharacteristic characteristic = getBluetoothGattCharacteristic(
                 gattService, characteristicUuid);
-        BluetoothGattDescriptor descriptor = getBluetoothGattDescriptor(
+        final BluetoothGattDescriptor descriptor = getBluetoothGattDescriptor(
                 characteristic, descriptorUuid);
+        NotifyToken notifyToken = new NotifyToken() {
+            @Override
+            protected boolean onRequestPrepared() {
+                if (isExistedBluetoothOperationToken(NotifyToken.class)) {
+                    return false;
+                }
+                putBluetoothOperationToken(NotifyToken.class, this);
+                return super.onRequestPrepared();
+            }
+
+            @Override
+            protected Object invoke() {
+                return enable(characteristic, descriptor, enable, isIndication);
+            }
+
+            @Override
+            protected void onRequestFinished(boolean isTimeout) {
+                super.onRequestFinished(isTimeout);
+                removeBluetoothOperationToken(NotifyToken.class);
+            }
+        };
+        return notifyToken;
     }
 
-    public void rssi() {
+    public RssiToken createReadRssiToken() {
+        RssiToken rssiToken = new RssiToken() {
+            @Override
+            protected boolean onRequestPrepared() {
+                if (isExistedBluetoothOperationToken(RssiToken.class)) {
+                    return false;
+                }
+                putBluetoothOperationToken(RssiToken.class, this);
+                return super.onRequestPrepared();
+            }
+
+            @Override
+            protected Object invoke() {
+                return readRemoteRssi();
+            }
+
+            @Override
+            protected void onRequestFinished(boolean isTimeout) {
+                super.onRequestFinished(isTimeout);
+                removeBluetoothOperationToken(RssiToken.class);
+            }
+        };
+        return rssiToken;
     }
 
-    public void disconnect(OnActionListener listener) {
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+    public MTUToken setMTU(int mtu) {
+        MTUToken mtuToken = new MTUToken() {
+            @Override
+            protected boolean onRequestPrepared() {
+                if (isExistedBluetoothOperationToken(MTUToken.class)) {
+                    return false;
+                }
+                putBluetoothOperationToken(MTUToken.class, this);
+                return super.onRequestPrepared();
+            }
+
+            @Override
+            protected Object invoke() {
+                return requestMtu(mtu);
+            }
+
+            @Override
+            protected void onRequestFinished(boolean isTimeout) {
+                super.onRequestFinished(isTimeout);
+                removeBluetoothOperationToken(MTUToken.class);
+            }
+        };
+        return mtuToken;
+    }
+
+    public DisconnectToken disconnect() {
+        DisconnectToken disconnectToken = new DisconnectToken() {
+            @Override
+            protected boolean onRequestPrepared() {
+                if (isExistedBluetoothOperationToken(DisconnectToken.class)) {
+                    return false;
+                }
+                putBluetoothOperationToken(DisconnectToken.class, this);
+                return super.onRequestPrepared();
+            }
+
+            @Override
+            protected Object invoke() {
+                innerDisconnect();
+                return true;
+            }
+
+            @Override
+            protected void onRequestFinished(boolean isTimeout) {
+                super.onRequestFinished(isTimeout);
+                removeBluetoothOperationToken(DisconnectToken.class);
+            }
+        };
+        return disconnectToken;
     }
 
     public List<BluetoothGattService> getGattServiceList() {

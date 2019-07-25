@@ -333,7 +333,7 @@ public abstract class GattComms extends BluetoothGattCallback {
     }
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-    protected boolean setMTU(int mtu) {
+    protected boolean requestMtu(int mtu) {
         return mBluetoothGatt.requestMtu(mtu);
     }
 
@@ -388,7 +388,7 @@ public abstract class GattComms extends BluetoothGattCallback {
         return mBluetoothGatt;
     }
 
-    protected void innerDisconnect() {
+    protected void innerDisconnectAndClose() {
         if (mBluetoothGatt != null) {
             mBluetoothGatt.disconnect();
             refreshDeviceCache();
@@ -396,10 +396,10 @@ public abstract class GattComms extends BluetoothGattCallback {
         }
     }
 
-    public void disconnect() {
+    public void innerDisconnect() {
         isActiveDisconnect = true;
         changeConnectionState(ConnectStateEnum.STATE_DISCONNECTING);
-        innerDisconnect();
+        innerDisconnectAndClose();
         mBluetoothGatt = null;
     }
 

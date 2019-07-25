@@ -6,6 +6,12 @@ import com.vivek.wo.ble.OnActionListener;
 import com.vivek.wo.ble.internal.BluetoothException;
 
 public abstract class NotifyToken extends Token {
+    /**
+     * 是否是指示器模式
+     */
+    protected boolean isIndication;
+
+    protected boolean enable;
 
     public NotifyToken() {
         super();
@@ -25,15 +31,21 @@ public abstract class NotifyToken extends Token {
         return this;
     }
 
+    public NotifyToken setIndication(boolean indication) {
+        this.isIndication = indication;
+        return this;
+    }
+
     public void notify(boolean enable) {
+        this.enable = enable;
         boolean isPrepared = onRequestPrepared();
         if (isPrepared) {
             invoke();
         }
     }
 
-    public void callback(BluetoothException exception, byte[] data, String characteristicUuid) {
-        callbackRequest(exception, data, characteristicUuid);
+    public void callback(BluetoothException exception, String characteristicUuid) {
+        callbackRequest(exception, characteristicUuid);
     }
 
     @Override
