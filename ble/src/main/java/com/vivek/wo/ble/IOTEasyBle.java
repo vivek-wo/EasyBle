@@ -7,7 +7,6 @@ import android.content.Context;
 import com.vivek.wo.ble.internal.BluetoothException;
 import com.vivek.wo.ble.internal.GattCommsObserver;
 import com.vivek.wo.ble.scan.OnScanCallback;
-import com.vivek.wo.ble.scan.ScanCallback;
 import com.vivek.wo.ble.scan.SingleFilterScanCallback;
 
 import java.util.List;
@@ -74,7 +73,6 @@ public class IOTEasyBle implements GattCommsObserver {
      * 先搜索后连接
      */
     public void scanConnect() {
-        scanConnect(ScanCallback.DEFAULT_SCANSECOND);
     }
 
     /**
@@ -167,10 +165,8 @@ public class IOTEasyBle implements GattCommsObserver {
     }
 
     @Override
-    public void connectLost(Throwable throwable) {
-        if (mGattCommsObserver != null) {
-            mGattCommsObserver.connectLost(throwable);
-        }
+    public void connectLost(BluetoothException e) {
+
     }
 
     public static final class Builder {

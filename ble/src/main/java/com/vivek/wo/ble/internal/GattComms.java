@@ -27,7 +27,6 @@ public abstract class GattComms extends BluetoothGattCallback {
 
     protected BluetoothGatt mBluetoothGatt; //提供子类使用
 
-
     enum ConnectStateEnum {
         /**
          * 无连接
@@ -167,7 +166,7 @@ public abstract class GattComms extends BluetoothGattCallback {
     private void observeGattCommsConnectFailure(int status, BluetoothException e) {
         synchronized (mGattCommsObservers) {
             for (GattCommsObserver observer : mGattCommsObservers) {
-                observer.connectLost(e);
+                observer.connectLost(isActiveDisconnect, e);
             }
         }
     }
@@ -186,6 +185,8 @@ public abstract class GattComms extends BluetoothGattCallback {
     }
 
     /**
+     * 蓝牙设备是否断开连接
+     *
      * @return
      */
     public boolean isDisconnected() {
@@ -196,122 +197,25 @@ public abstract class GattComms extends BluetoothGattCallback {
         return isDisconnected;
     }
 
-    /**
-     * Callback reporting the result of a characteristic read operation.
-     *
-     * @param gatt           GATT client invoked {@link BluetoothGatt#readCharacteristic}
-     * @param characteristic Characteristic that was read from the associated
-     *                       remote device.
-     * @param status         {@link BluetoothGatt#GATT_SUCCESS} if the read operation
-     *                       was completed successfully.
-     */
-    @Override
-    public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
-        super.onCharacteristicRead(gatt, characteristic, status);
-    }
-
-    /**
-     * Callback indicating the result of a characteristic write operation.
-     * <p>
-     * <p>If this callback is invoked while a reliable write transaction is
-     * in progress, the value of the characteristic represents the value
-     * reported by the remote device. An application should compare this
-     * value to the desired value to be written. If the values don't match,
-     * the application must abort the reliable write transaction.
-     *
-     * @param gatt           GATT client invoked {@link BluetoothGatt#writeCharacteristic}
-     * @param characteristic Characteristic that was written to the associated
-     *                       remote device.
-     * @param status         The result of the write operation
-     *                       {@link BluetoothGatt#GATT_SUCCESS} if the operation succeeds.
-     */
-    @Override
-    public void onCharacteristicWrite(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
-        super.onCharacteristicWrite(gatt, characteristic, status);
-    }
-
-    /**
-     * Callback triggered as a result of a remote characteristic notification.
-     *
-     * @param gatt           GATT client the characteristic is associated with
-     * @param characteristic Characteristic that has been updated as a result
-     *                       of a remote notification event.
-     */
-    @Override
-    public void onCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic) {
-        super.onCharacteristicChanged(gatt, characteristic);
-    }
-
-    /**
-     * Callback reporting the result of a descriptor read operation.
-     *
-     * @param gatt       GATT client invoked {@link BluetoothGatt#readDescriptor}
-     * @param descriptor Descriptor that was read from the associated
-     *                   remote device.
-     * @param status     {@link BluetoothGatt#GATT_SUCCESS} if the read operation
-     *                   was completed successfully
-     */
-    @Override
-    public void onDescriptorRead(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
-        super.onDescriptorRead(gatt, descriptor, status);
-    }
-
-    /**
-     * Callback indicating the result of a descriptor write operation.
-     *
-     * @param gatt       GATT client invoked {@link BluetoothGatt#writeDescriptor}
-     * @param descriptor Descriptor that was writte to the associated
-     *                   remote device.
-     * @param status     The result of the write operation
-     *                   {@link BluetoothGatt#GATT_SUCCESS} if the operation succeeds.
-     */
-    @Override
-    public void onDescriptorWrite(BluetoothGatt gatt, BluetoothGattDescriptor descriptor, int status) {
-        super.onDescriptorWrite(gatt, descriptor, status);
-    }
-
-    /**
-     * Callback reporting the RSSI for a remote device connection.
-     * <p>
-     * This callback is triggered in response to the
-     * {@link BluetoothGatt#readRemoteRssi} function.
-     *
-     * @param gatt   GATT client invoked {@link BluetoothGatt#readRemoteRssi}
-     * @param rssi   The RSSI value for the remote device
-     * @param status {@link BluetoothGatt#GATT_SUCCESS} if the RSSI was read successfully
-     */
-    @Override
-    public void onReadRemoteRssi(BluetoothGatt gatt, int rssi, int status) {
-        super.onReadRemoteRssi(gatt, rssi, status);
-    }
-
-    /**
-     * Callback indicating the MTU for a given device connection has changed.
-     * <p>
-     * This callback is triggered in response to the
-     * {@link BluetoothGatt#requestMtu} function, or in response to a connection
-     * event.
-     *
-     * @param gatt   GATT client invoked {@link BluetoothGatt#requestMtu}
-     * @param mtu    The new MTU size
-     * @param status {@link BluetoothGatt#GATT_SUCCESS} if the MTU has been changed successfully
-     */
-    @Override
-    public void onMtuChanged(BluetoothGatt gatt, int mtu, int status) {
-        super.onMtuChanged(gatt, mtu, status);
-    }
-
     private static void checkCharacteristicNULL(BluetoothGattCharacteristic characteristic) {
         if (characteristic == null) {
             throw new NullPointerException("BluetoothGattCharacteristic cannot be NULL");
         }
     }
 
+    /**
+     * @param bluetoothDevice
+     * @param autoConnect
+     */
     protected void innerConnect(BluetoothDevice bluetoothDevice, boolean autoConnect) {
         changeConnectionState(ConnectStateEnum.STATE_CONNECTING);
         bluetoothDevice.connectGatt(mContext, autoConnect, this);
     }
 
+    /**
+     * @param characteristic
+     * @return
+     */
     protected boolean innerRead(BluetoothGattCharacteristic characteristic) {
         checkCharacteristicNULL(characteristic);
         return mBluetoothGatt.readCharacteristic(characteristic);
@@ -328,15 +232,29 @@ public abstract class GattComms extends BluetoothGattCallback {
         return mBluetoothGatt.writeCharacteristic(characteristic);
     }
 
+    /**
+     * @return
+     */
     protected boolean readRemoteRssi() {
         return mBluetoothGatt.readRemoteRssi();
     }
 
+    /**
+     * @param mtu
+     * @return
+     */
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     protected boolean requestMtu(int mtu) {
         return mBluetoothGatt.requestMtu(mtu);
     }
 
+    /**
+     * @param characteristic
+     * @param descriptor
+     * @param enable
+     * @param isIndication
+     * @return
+     */
     protected boolean enable(BluetoothGattCharacteristic characteristic,
                              BluetoothGattDescriptor descriptor, boolean enable, boolean isIndication) {
         checkCharacteristicNULL(characteristic);
@@ -368,6 +286,9 @@ public abstract class GattComms extends BluetoothGattCallback {
         return true;
     }
 
+    /**
+     * @return
+     */
     protected boolean refreshDeviceCache() {
         try {
             final Method refresh = BluetoothGatt.class.getMethod("refresh");
@@ -388,6 +309,9 @@ public abstract class GattComms extends BluetoothGattCallback {
         return mBluetoothGatt;
     }
 
+    /**
+     *
+     */
     protected void innerDisconnectAndClose() {
         if (mBluetoothGatt != null) {
             mBluetoothGatt.disconnect();
@@ -396,7 +320,10 @@ public abstract class GattComms extends BluetoothGattCallback {
         }
     }
 
-    public void innerDisconnect() {
+    /**
+     *
+     */
+    protected void innerDisconnect() {
         isActiveDisconnect = true;
         changeConnectionState(ConnectStateEnum.STATE_DISCONNECTING);
         innerDisconnectAndClose();
