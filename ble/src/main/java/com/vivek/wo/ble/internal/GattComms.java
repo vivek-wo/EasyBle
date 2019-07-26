@@ -184,17 +184,16 @@ public abstract class GattComms extends BluetoothGattCallback {
         return isConnected;
     }
 
-    /**
-     * 蓝牙设备是否断开连接
-     *
-     * @return
-     */
-    public boolean isDisconnected() {
+    protected boolean isDisconnected() {
         boolean isDisconnected;
         synchronized (mConnectState) {
             isDisconnected = (mConnectState == ConnectStateEnum.STATE_DISCONNECTED);
         }
         return isDisconnected;
+    }
+
+    protected boolean isActiveDisconnect() {
+        return isActiveDisconnect;
     }
 
     private static void checkCharacteristicNULL(BluetoothGattCharacteristic characteristic) {

@@ -32,8 +32,8 @@ public abstract class DisconnectToken extends Token {
         }
     }
 
-    public void callback(BluetoothException exception) {
-        callbackRequest(exception);
+    public void callback(BluetoothException exception, Boolean isActiveDisconnect) {
+        callbackRequest(exception, isActiveDisconnect);
     }
 
     @Override

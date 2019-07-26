@@ -62,6 +62,17 @@ public class BluetoothComms extends GattComms {
         if (newState == BluetoothGatt.STATE_DISCONNECTED) {
             if (isDisconnected()) {
 //        断开连接
+                DisconnectToken disconnectToken = (DisconnectToken) removeBluetoothOperationToken(
+                        ConnectToken.class);
+                if (disconnectToken == null) {
+                    return;
+                }
+                if (status == BluetoothGatt.GATT_SUCCESS) {
+                    disconnectToken.callback(null, isActiveDisconnect());
+                } else {
+                    disconnectToken.callback(new BluetoothException(status,
+                            "Disconnect callback failure! "), isActiveDisconnect());
+                }
             } else {
 //        连接失败
                 ConnectToken connectToken = (ConnectToken) removeBluetoothOperationToken(
@@ -95,7 +106,7 @@ public class BluetoothComms extends GattComms {
     @Override
     public void onCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, int status) {
         super.onCharacteristicRead(gatt, characteristic, status);
-        byte[] data = null;
+        byte[] data;
         ReadToken readToken = (ReadToken) removeBluetoothOperationToken(ReadToken.class);
         if (readToken == null) {
             return;
@@ -115,7 +126,7 @@ public class BluetoothComms extends GattComms {
                                       BluetoothGattCharacteristic characteristic, int status) {
         super.onCharacteristicWrite(gatt, characteristic, status);
         //写回调
-        byte[] data = null;
+        byte[] data;
         WriteToken writeToken = (WriteToken) removeBluetoothOperationToken(WriteToken.class);
         if (writeToken == null) {
             return;
@@ -174,6 +185,9 @@ public class BluetoothComms extends GattComms {
         }
     }
 
+    /**
+     * @return
+     */
     public ConnectToken createConnectToken() {
         ConnectToken connectToken = new ConnectToken() {
 
@@ -205,6 +219,11 @@ public class BluetoothComms extends GattComms {
         return connectToken;
     }
 
+    /**
+     * @param serviceUuid
+     * @param characteristicUuid
+     * @return
+     */
     public ReadToken createReadToken(String serviceUuid, String characteristicUuid) {
         BluetoothGattService gattService = getBluetoothGattService(serviceUuid);
         final BluetoothGattCharacteristic characteristic = getBluetoothGattCharacteristic(
@@ -233,6 +252,11 @@ public class BluetoothComms extends GattComms {
         return readToken;
     }
 
+    /**
+     * @param serviceUuid
+     * @param characteristicUuid
+     * @return
+     */
     public WriteToken createWriteToken(String serviceUuid, String characteristicUuid) {
         BluetoothGattService gattService = getBluetoothGattService(serviceUuid);
         BluetoothGattCharacteristic characteristic = getBluetoothGattCharacteristic(
@@ -261,6 +285,12 @@ public class BluetoothComms extends GattComms {
         return writeToken;
     }
 
+    /**
+     * @param serviceUuid
+     * @param characteristicUuid
+     * @param descriptorUuid
+     * @return
+     */
     public NotifyToken createNotifyToken(String serviceUuid, String characteristicUuid,
                                          String descriptorUuid) {
         BluetoothGattService gattService = getBluetoothGattService(serviceUuid);
@@ -292,6 +322,9 @@ public class BluetoothComms extends GattComms {
         return notifyToken;
     }
 
+    /**
+     * @return
+     */
     public RssiToken createReadRssiToken() {
         RssiToken rssiToken = new RssiToken() {
             @Override
@@ -317,6 +350,10 @@ public class BluetoothComms extends GattComms {
         return rssiToken;
     }
 
+    /**
+     * @param mtu
+     * @return
+     */
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     public MTUToken setMTU(int mtu) {
         MTUToken mtuToken = new MTUToken() {
@@ -343,6 +380,9 @@ public class BluetoothComms extends GattComms {
         return mtuToken;
     }
 
+    /**
+     * @return
+     */
     public DisconnectToken disconnect() {
         DisconnectToken disconnectToken = new DisconnectToken() {
             @Override
@@ -369,15 +409,26 @@ public class BluetoothComms extends GattComms {
         return disconnectToken;
     }
 
+    /**
+     * @return
+     */
     public List<BluetoothGattService> getGattServiceList() {
         return getBluetoothGatt().getServices();
     }
 
+    /**
+     * @param gattService
+     * @return
+     */
     public List<BluetoothGattCharacteristic> getGattCharacteristicList(
             BluetoothGattService gattService) {
         return gattService.getCharacteristics();
     }
 
+    /**
+     * @param gattCharacteristic
+     * @return
+     */
     public List<BluetoothGattDescriptor> getGattDescriptorList(
             BluetoothGattCharacteristic gattCharacteristic) {
         return gattCharacteristic.getDescriptors();

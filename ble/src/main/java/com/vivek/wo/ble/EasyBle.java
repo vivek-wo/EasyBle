@@ -72,7 +72,7 @@ public class EasyBle {
     }
 
     /**
-     * 销毁
+     * 反初始化
      */
     public void uninit() {
         if (this.mContext != null) {
@@ -152,7 +152,7 @@ public class EasyBle {
 
     private void checkBluetoothAdapterNULL() throws BluetoothException {
         if (mBluetoothAdapter == null) {
-            throw new BluetoothException(new NullPointerException("BluetoothAdapter NULL"));
+            throw new BluetoothException(new NullPointerException("BluetoothAdapter NULL."));
         }
     }
 
@@ -193,7 +193,6 @@ public class EasyBle {
      */
     public void connect(BluetoothDeviceExtend bluetoothDeviceExtend,
                         OnActionListener listener) {
-        BluetoothComms comms = new BluetoothComms(mContext, bluetoothDeviceExtend);
     }
 
     /**
@@ -210,7 +209,6 @@ public class EasyBle {
                 new OnScanCallback() {
                     @Override
                     public void onDeviceFound(BluetoothDeviceExtend bluetoothDeviceExtend, List<BluetoothDeviceExtend> result) {
-                        BluetoothComms comms = new BluetoothComms(mContext, bluetoothDeviceExtend);
                     }
 
                     @Override
@@ -234,8 +232,6 @@ public class EasyBle {
      * 根据蓝牙MAC地址断开当前连接
      */
     public void disconnect(String deviceAddress) throws BluetoothException {
-        BluetoothComms comms = mConnectedDeviceExtendMap.get(deviceAddress);
-        comms.createConnectToken().connect();
     }
 
     /**
@@ -250,29 +246,26 @@ public class EasyBle {
     /**
      * 读取数据
      */
-    public void read(String deviceAddress, String serviceUUIDString,
-                     String characteristicUUIDString, OnActionListener listener)
+    public void read(String deviceAddress, String serviceUuid,
+                     String characteristicUuid, OnActionListener listener)
             throws BluetoothException {
-        BluetoothComms comms = mConnectedDeviceExtendMap.get(deviceAddress);
     }
 
     /**
      * 写数据
      */
-    public void write(String deviceAddress, String serviceUUIDString,
-                      String characteristicUUIDString, byte[] data, OnActionListener listener)
+    public void write(String deviceAddress, String serviceUuid,
+                      String characteristicUuid, byte[] data, OnActionListener listener)
             throws BluetoothException {
-        BluetoothComms comms = mConnectedDeviceExtendMap.get(deviceAddress);
     }
 
     /**
      * 打开数据通知和关闭通知
      */
-    public void notify(String deviceAddress, String serviceUUIDString,
-                       String characteristicUUIDString, String descriptorUUIDString,
+    public void notify(String deviceAddress, String serviceUuid,
+                       String characteristicUuid, String descriptorUuid,
                        boolean enable, boolean isIndication, OnActionListener listener)
             throws BluetoothException {
-        BluetoothComms comms = mConnectedDeviceExtendMap.get(deviceAddress);
     }
 
     /**
@@ -280,7 +273,6 @@ public class EasyBle {
      */
     public void readRssi(String deviceAddress, OnActionListener listener)
             throws BluetoothException {
-        BluetoothComms comms = mConnectedDeviceExtendMap.get(deviceAddress);
     }
 
     /**

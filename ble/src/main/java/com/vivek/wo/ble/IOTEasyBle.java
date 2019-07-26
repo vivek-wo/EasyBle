@@ -19,25 +19,24 @@ public class IOTEasyBle implements GattCommsObserver {
     private GattCommsObserver mGattCommsObserver;
     private String deviceName;
     private String deviceAddress;
-    private String serviceUUIDString;
-    private String readableCharacteristicUUIDString;
-    private String writableCharacteristicUUIDString;
-    private String noticableCharacteristicUUIDString;
-    private String noticableDescriptorUUIDString;
+    private String serviceUuid;
+    private String readableCharacteristicUuid;
+    private String writableCharacteristicUuid;
+    private String noticableCharacteristicUuid;
+    private String noticableDescriptorUuid;
 
     IOTEasyBle(Builder builder) {
         mContext = builder.context;
         mBluetoothManager = (BluetoothManager) mContext
                 .getSystemService(Context.BLUETOOTH_SERVICE);
         mBluetoothAdapter = mBluetoothManager.getAdapter();
-//        mMethodQueueHandler = new MethodQueueHandler();
         this.deviceName = builder.deviceName;
         this.deviceAddress = builder.deviceAddress;
-        this.serviceUUIDString = builder.serviceUUIDString;
-        this.readableCharacteristicUUIDString = builder.readableCharacteristicUUIDString;
-        this.writableCharacteristicUUIDString = builder.writableCharacteristicUUIDString;
-        this.noticableCharacteristicUUIDString = builder.noticableCharacteristicUUIDString;
-        this.noticableDescriptorUUIDString = builder.noticableDescriptorUUIDString;
+        this.serviceUuid = builder.serviceUuid;
+        this.readableCharacteristicUuid = builder.readableCharacteristicUuid;
+        this.writableCharacteristicUuid = builder.writableCharacteristicUuid;
+        this.noticableCharacteristicUuid = builder.noticableCharacteristicUuid;
+        this.noticableDescriptorUuid = builder.noticableDescriptorUuid;
     }
 
     /**
@@ -99,8 +98,6 @@ public class IOTEasyBle implements GattCommsObserver {
                 new OnScanCallback() {
                     @Override
                     public void onDeviceFound(BluetoothDeviceExtend bluetoothDeviceExtend, List<BluetoothDeviceExtend> result) {
-//                        mBluetoothComms.setMethodQueueHandler(mMethodQueueHandler);
-//                        connect(MethodObject.DEFAULT_TIMEOUT, listener, bluetoothDeviceExtend);
                     }
 
                     @Override
@@ -126,7 +123,6 @@ public class IOTEasyBle implements GattCommsObserver {
      * 直接进行蓝牙连接
      */
     public void connect() throws BluetoothException {
-//        connect(MethodObject.DEFAULT_TIMEOUT);
     }
 
     /**
@@ -146,15 +142,10 @@ public class IOTEasyBle implements GattCommsObserver {
      */
     public void connect(long timeout, OnActionListener listener)
             throws BluetoothException {
-        innerConnect(timeout, listener);
     }
 
-    private void innerConnect(long timeout, OnActionListener listener)
-            throws BluetoothException {
-    }
-
-    private void connect(long timeout, OnActionListener listener,
-                         BluetoothDeviceExtend bluetoothDeviceExtend) {
+    private void connect(BluetoothDeviceExtend bluetoothDeviceExtend, long timeout,
+                         OnActionListener listener) {
     }
 
     @Override
@@ -165,19 +156,21 @@ public class IOTEasyBle implements GattCommsObserver {
     }
 
     @Override
-    public void connectLost(BluetoothException e) {
-
+    public void connectLost(boolean isActiveDisconnect, BluetoothException e) {
+        if (mGattCommsObserver != null) {
+            mGattCommsObserver.connectLost(isActiveDisconnect, e);
+        }
     }
 
     public static final class Builder {
         private Context context;
         private String deviceName;
         private String deviceAddress;
-        private String serviceUUIDString;
-        private String readableCharacteristicUUIDString;
-        private String writableCharacteristicUUIDString;
-        private String noticableCharacteristicUUIDString;
-        private String noticableDescriptorUUIDString;
+        private String serviceUuid;
+        private String readableCharacteristicUuid;
+        private String writableCharacteristicUuid;
+        private String noticableCharacteristicUuid;
+        private String noticableDescriptorUuid;
 
         public Builder(Context context) {
             this.context = context;
@@ -193,28 +186,28 @@ public class IOTEasyBle implements GattCommsObserver {
             return this;
         }
 
-        public Builder setServiceUUIDString(String serviceUUIDString) {
-            this.serviceUUIDString = serviceUUIDString;
+        public Builder setServiceUuid(String serviceUuid) {
+            this.serviceUuid = serviceUuid;
             return this;
         }
 
-        public Builder setReadableCharacteristicUUIDString(String readableCharacteristicUUIDString) {
-            this.readableCharacteristicUUIDString = readableCharacteristicUUIDString;
+        public Builder setReadableCharacteristicUuid(String readableCharacteristicUuid) {
+            this.readableCharacteristicUuid = readableCharacteristicUuid;
             return this;
         }
 
-        public Builder setWritableCharacteristicUUIDString(String writableCharacteristicUUIDString) {
-            this.writableCharacteristicUUIDString = writableCharacteristicUUIDString;
+        public Builder setWritableCharacteristicUuid(String writableCharacteristicUuid) {
+            this.writableCharacteristicUuid = writableCharacteristicUuid;
             return this;
         }
 
-        public Builder setNoticableCharacteristicUUIDString(String noticableCharacteristicUUIDString) {
-            this.noticableCharacteristicUUIDString = noticableCharacteristicUUIDString;
+        public Builder setNoticableCharacteristicUuid(String noticableCharacteristicUuid) {
+            this.noticableCharacteristicUuid = noticableCharacteristicUuid;
             return this;
         }
 
-        public Builder setNoticableDescriptorUUIDString(String noticableDescriptorUUIDString) {
-            this.noticableDescriptorUUIDString = noticableDescriptorUUIDString;
+        public Builder setNoticableDescriptorUuid(String noticableDescriptorUuid) {
+            this.noticableDescriptorUuid = noticableDescriptorUuid;
             return this;
         }
 
