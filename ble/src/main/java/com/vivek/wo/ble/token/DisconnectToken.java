@@ -38,6 +38,6 @@ public abstract class DisconnectToken extends Token {
 
     @Override
     public void run() {
-        callbackTimeout("Connect");
+        callbackTimeout("Disconnect");
     }
 }

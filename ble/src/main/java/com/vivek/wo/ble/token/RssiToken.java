@@ -38,6 +38,6 @@ public abstract class RssiToken extends Token {
 
     @Override
     public void run() {
-        callbackTimeout("ReadRssi");
+        callbackTimeout("Rssi");
     }
 }

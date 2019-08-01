@@ -38,6 +38,11 @@ public class BluetoothComms extends GattComms {
         this.bluetoothDeviceExtend = bluetoothDeviceExtend;
     }
 
+    /**
+     * 当前蓝牙设备
+     *
+     * @return
+     */
     public BluetoothDeviceExtend getBluetoothDeviceExtend() {
         return bluetoothDeviceExtend;
     }
@@ -186,6 +191,8 @@ public class BluetoothComms extends GattComms {
     }
 
     /**
+     * 创建连接
+     *
      * @return
      */
     public ConnectToken createConnectToken() {
@@ -220,6 +227,8 @@ public class BluetoothComms extends GattComms {
     }
 
     /**
+     * 创建读操作
+     *
      * @param serviceUuid
      * @param characteristicUuid
      * @return
@@ -253,6 +262,8 @@ public class BluetoothComms extends GattComms {
     }
 
     /**
+     * 创建写操作
+     *
      * @param serviceUuid
      * @param characteristicUuid
      * @return
@@ -286,6 +297,8 @@ public class BluetoothComms extends GattComms {
     }
 
     /**
+     * 创建通知操作
+     *
      * @param serviceUuid
      * @param characteristicUuid
      * @param descriptorUuid
@@ -323,6 +336,8 @@ public class BluetoothComms extends GattComms {
     }
 
     /**
+     * 创建读Rssi操作
+     *
      * @return
      */
     public RssiToken createReadRssiToken() {
@@ -351,6 +366,8 @@ public class BluetoothComms extends GattComms {
     }
 
     /**
+     * 创建设置MTU操作
+     *
      * @param mtu
      * @return
      */
@@ -381,6 +398,8 @@ public class BluetoothComms extends GattComms {
     }
 
     /**
+     * 创建断开连接操作
+     *
      * @return
      */
     public DisconnectToken disconnect() {
@@ -410,6 +429,8 @@ public class BluetoothComms extends GattComms {
     }
 
     /**
+     * 获取服务列表
+     *
      * @return
      */
     public List<BluetoothGattService> getGattServiceList() {
@@ -417,6 +438,8 @@ public class BluetoothComms extends GattComms {
     }
 
     /**
+     * 获取服务特征列表
+     *
      * @param gattService
      * @return
      */
@@ -426,6 +449,8 @@ public class BluetoothComms extends GattComms {
     }
 
     /**
+     * 获取特征描述列表
+     *
      * @param gattCharacteristic
      * @return
      */

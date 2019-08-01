@@ -45,6 +45,9 @@ public abstract class WriteToken extends Token {
      *                  {@link #WRITE_TYPE_NO_RESPONSE}
      */
     public WriteToken setWriteType(int writeType) {
+        if (writeType != WRITE_TYPE_DEFAULT || writeType != WRITE_TYPE_NO_RESPONSE) {
+            throw new IllegalArgumentException("Argument writeType not supported. ");
+        }
         characteristic.setWriteType(writeType);
         return this;
     }
