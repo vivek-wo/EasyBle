@@ -35,7 +35,6 @@ public class EasyBle {
     private Map<String, BluetoothComms> mConnectedDeviceExtendMap = new HashMap<>();
 
     private EasyBle() {
-
     }
 
     private static class EasyBleHolder {
@@ -140,11 +139,12 @@ public class EasyBle {
      * 打开蓝牙
      *
      * @param activity    上下文
-     * @param requestCode
+     * @param requestCode If >= 0, this code will be returned in
+     *                    onActivityResult() when the activity exits.
      */
-    public void enableBluetooth(Activity activity, int requestCode) throws BluetoothException {
+    public void enableBluetooth(Activity activity, int requestCode) {
         if (activity == null) {
-            throw new BluetoothException(new NullPointerException("Activity cannot be NULL."));
+            throw new NullPointerException("Activity cannot be NULL.");
         }
         Intent intent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
         activity.startActivityForResult(intent, requestCode);

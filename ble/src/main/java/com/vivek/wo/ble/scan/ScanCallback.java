@@ -231,10 +231,9 @@ public class ScanCallback implements ScanFilter {
             } else {
                 bluetoothDeviceExtend = new BluetoothDeviceExtend(device, rssi, scanRecord);
                 mBluetoothDeviceExtendMap.put(device.getAddress(), bluetoothDeviceExtend);
+                mBluetoothDeviceExtendList.add(bluetoothDeviceExtend);
             }
             if (mScanCallback != null) {
-                mBluetoothDeviceExtendList.clear();
-                mBluetoothDeviceExtendList.addAll(mBluetoothDeviceExtendMap.values());
                 mScanCallback.onDeviceFound(bluetoothDeviceExtend, mBluetoothDeviceExtendList);
             }
         }
