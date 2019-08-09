@@ -34,7 +34,7 @@ public abstract class ReadToken extends Token {
     }
 
     @Override
-    public void run() {
+    void onTimeout() {
         callbackTimeout("Read");
     }
 }

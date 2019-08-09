@@ -37,7 +37,7 @@ public abstract class MTUToken extends Token {
     }
 
     @Override
-    public void run() {
+    void onTimeout() {
         callbackTimeout("MTU");
     }
 }

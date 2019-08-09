@@ -5,7 +5,7 @@ import android.os.Looper;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public abstract class Token implements Runnable {
+public abstract class Token {
     private Handler mHandler;
     protected AtomicBoolean isTimeoutCallback = new AtomicBoolean(false);
     protected long timeout;
@@ -64,7 +64,7 @@ public abstract class Token implements Runnable {
             if (mHandler == null) {
                 mHandler = new Handler(Looper.getMainLooper());
             }
-            mHandler.postDelayed(this, timeout);
+            mHandler.postDelayed(mTimeoutRunnable, timeout);
         }
     }
 
@@ -73,9 +73,18 @@ public abstract class Token implements Runnable {
      */
     void removeTimeoutTask() {
         if (timeout > 0 && mHandler != null) {
-            mHandler.removeCallbacks(this);
+            mHandler.removeCallbacks(mTimeoutRunnable);
         }
     }
+
+    protected Runnable mTimeoutRunnable = new Runnable() {
+        @Override
+        public void run() {
+            onTimeout();
+        }
+    };
+
+    abstract void onTimeout();
 
     /**
      * 蓝牙请求回调

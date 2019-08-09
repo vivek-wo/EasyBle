@@ -34,7 +34,7 @@ public abstract class DisconnectToken extends Token {
     }
 
     @Override
-    public void run() {
+    void onTimeout() {
         callbackTimeout("Disconnect");
     }
 }

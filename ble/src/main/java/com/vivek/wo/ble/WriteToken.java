@@ -85,7 +85,7 @@ public abstract class WriteToken extends Token {
     }
 
     @Override
-    public void run() {
+    void onTimeout() {
         callbackTimeout("Write");
     }
 }

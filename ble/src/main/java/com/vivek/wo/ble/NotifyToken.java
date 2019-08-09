@@ -46,7 +46,7 @@ public abstract class NotifyToken extends Token {
     }
 
     @Override
-    public void run() {
+    void onTimeout() {
         callbackTimeout("Notify");
     }
 }

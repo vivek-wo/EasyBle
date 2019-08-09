@@ -34,7 +34,7 @@ public abstract class ConnectToken extends Token {
     }
 
     @Override
-    public void run() {
+    void onTimeout() {
         callbackTimeout("Connect");
     }
 }
