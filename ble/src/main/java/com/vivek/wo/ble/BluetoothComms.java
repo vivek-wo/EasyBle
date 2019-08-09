@@ -8,17 +8,6 @@ import android.content.Context;
 import android.os.Build;
 import android.support.annotation.RequiresApi;
 
-import com.vivek.wo.ble.internal.BluetoothException;
-import com.vivek.wo.ble.internal.GattComms;
-import com.vivek.wo.ble.token.ConnectToken;
-import com.vivek.wo.ble.token.DisconnectToken;
-import com.vivek.wo.ble.token.MTUToken;
-import com.vivek.wo.ble.token.NotifyToken;
-import com.vivek.wo.ble.token.ReadToken;
-import com.vivek.wo.ble.token.RssiToken;
-import com.vivek.wo.ble.token.Token;
-import com.vivek.wo.ble.token.WriteToken;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,6 +24,10 @@ public class BluetoothComms extends GattComms {
 
     public BluetoothComms(Context context, BluetoothDeviceExtend bluetoothDeviceExtend) {
         super(context);
+        this.bluetoothDeviceExtend = bluetoothDeviceExtend;
+    }
+
+    public void setBluetoothDeviceExtend(BluetoothDeviceExtend bluetoothDeviceExtend) {
         this.bluetoothDeviceExtend = bluetoothDeviceExtend;
     }
 
@@ -340,7 +333,7 @@ public class BluetoothComms extends GattComms {
      *
      * @return
      */
-    public RssiToken createReadRssiToken() {
+    public RssiToken createRssiToken() {
         RssiToken rssiToken = new RssiToken() {
             @Override
             protected boolean onRequestPrepared() {
@@ -368,11 +361,10 @@ public class BluetoothComms extends GattComms {
     /**
      * 创建设置MTU操作
      *
-     * @param mtu
      * @return
      */
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-    public MTUToken setMTU(int mtu) {
+    public MTUToken createMTUToken() {
         MTUToken mtuToken = new MTUToken() {
             @Override
             protected boolean onRequestPrepared() {
@@ -402,7 +394,7 @@ public class BluetoothComms extends GattComms {
      *
      * @return
      */
-    public DisconnectToken disconnect() {
+    public DisconnectToken createDisconnectToken() {
         DisconnectToken disconnectToken = new DisconnectToken() {
             @Override
             protected boolean onRequestPrepared() {

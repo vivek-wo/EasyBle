@@ -1,9 +1,6 @@
-package com.vivek.wo.ble.token;
+package com.vivek.wo.ble;
 
 import android.os.Handler;
-
-import com.vivek.wo.ble.OnActionListener;
-import com.vivek.wo.ble.internal.BluetoothException;
 
 public abstract class NotifyToken extends Token {
     /**
@@ -21,7 +18,7 @@ public abstract class NotifyToken extends Token {
         super(handler);
     }
 
-    public NotifyToken setTimeout(int timeout) {
+    public NotifyToken setTimeout(long timeout) {
         this.timeout = timeout;
         return this;
     }

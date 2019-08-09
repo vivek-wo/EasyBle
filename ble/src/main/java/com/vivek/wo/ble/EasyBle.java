@@ -2,6 +2,7 @@ package com.vivek.wo.ble;
 
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
@@ -11,12 +12,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
-
-import com.vivek.wo.ble.internal.BluetoothException;
-import com.vivek.wo.ble.internal.GattCommsObserver;
-import com.vivek.wo.ble.scan.OnScanCallback;
-import com.vivek.wo.ble.scan.ScanCallback;
-import com.vivek.wo.ble.scan.SingleFilterScanCallback;
+import android.os.Build;
+import android.support.annotation.RequiresApi;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -31,7 +28,6 @@ public class EasyBle {
     private BluetoothStateObserver mStateObserver;
     private BroadcastReceiver mBluetoothStateChangedReceiver;
     private ScanCallback mScanCallback;
-
     private Map<String, BluetoothComms> mConnectedDeviceExtendMap = new HashMap<>();
 
     private EasyBle() {
@@ -141,6 +137,7 @@ public class EasyBle {
      * @param activity    上下文
      * @param requestCode If >= 0, this code will be returned in
      *                    onActivityResult() when the activity exits.
+     * @throws BluetoothException
      */
     public void enableBluetooth(Activity activity, int requestCode) {
         if (activity == null) {
@@ -162,7 +159,7 @@ public class EasyBle {
      * @param callback
      * @throws BluetoothException
      */
-    public void scan(OnScanCallback callback) throws BluetoothException {
+    public void scan(OnScanCallback callback) {
         checkBluetoothAdapterNULL();
         if (mScanCallback == null) {
             mScanCallback = new ScanCallback(mBluetoothAdapter, callback);
@@ -191,14 +188,75 @@ public class EasyBle {
     /**
      * 蓝牙设备连接
      */
-    public void connect(BluetoothDeviceExtend bluetoothDeviceExtend,
-                        OnActionListener listener) {
+    public void connect(final BluetoothDeviceExtend bluetoothDeviceExtend,
+                        final OnActionListener listener) {
+        final BluetoothComms bluetoothComms;
+        if (mConnectedDeviceExtendMap.containsKey(
+                bluetoothDeviceExtend.getDeviceAddress())) {
+            bluetoothComms = mConnectedDeviceExtendMap.get(bluetoothDeviceExtend.getDeviceAddress());
+            bluetoothComms.setBluetoothDeviceExtend(bluetoothDeviceExtend);
+        } else {
+            bluetoothComms = new BluetoothComms(mContext, bluetoothDeviceExtend);
+        }
+        bluetoothComms.createConnectToken().setOnActionListener(new OnActionListener() {
+            @Override
+            public void onSuccess(Object... args) {
+                if (!mConnectedDeviceExtendMap.containsKey(
+                        bluetoothDeviceExtend.getDeviceAddress())) {
+                    mConnectedDeviceExtendMap.put(
+                            bluetoothDeviceExtend.getDeviceAddress(), bluetoothComms);
+                }
+                if (listener != null) {
+                    listener.onSuccess(args);
+                }
+            }
+
+            @Override
+            public void onFailure(BluetoothException exception) {
+                if (listener != null) {
+                    listener.onFailure(exception);
+                }
+            }
+        }).connect();
     }
 
     /**
      * 蓝牙MAC地址直接连接
      */
-    public void connect(String deviceAddress, OnActionListener listener) throws BluetoothException {
+    public void connect(final String deviceAddress, final OnActionListener listener) {
+        final BluetoothComms bluetoothComms;
+        if (mConnectedDeviceExtendMap.containsKey(deviceAddress)) {
+            bluetoothComms = mConnectedDeviceExtendMap.get(deviceAddress);
+        } else {
+            if (!mBluetoothAdapter.checkBluetoothAddress(deviceAddress)) {
+                throw new IllegalArgumentException("DeviceAddress Invalid");
+            }
+            BluetoothDevice bluetoothDevice = mBluetoothAdapter.getRemoteDevice(deviceAddress);
+            if (bluetoothDevice == null) {
+                //back
+                throw new BluetoothException("DeviceAddress device can not found");
+            }
+            bluetoothComms = new BluetoothComms(mContext,
+                    new BluetoothDeviceExtend(bluetoothDevice));
+        }
+        bluetoothComms.createConnectToken().setOnActionListener(new OnActionListener() {
+            @Override
+            public void onSuccess(Object... args) {
+                if (!mConnectedDeviceExtendMap.containsKey(deviceAddress)) {
+                    mConnectedDeviceExtendMap.put(deviceAddress, bluetoothComms);
+                }
+                if (listener != null) {
+                    listener.onSuccess(args);
+                }
+            }
+
+            @Override
+            public void onFailure(BluetoothException exception) {
+                if (listener != null) {
+                    listener.onFailure(exception);
+                }
+            }
+        }).connect();
     }
 
     /**
@@ -209,6 +267,7 @@ public class EasyBle {
                 new OnScanCallback() {
                     @Override
                     public void onDeviceFound(BluetoothDeviceExtend bluetoothDeviceExtend, List<BluetoothDeviceExtend> result) {
+                        connect(bluetoothDeviceExtend, listener);
                     }
 
                     @Override
@@ -232,6 +291,11 @@ public class EasyBle {
      * 根据蓝牙MAC地址断开当前连接
      */
     public void disconnect(String deviceAddress) throws BluetoothException {
+        BluetoothComms bluetoothComms;
+        if (mConnectedDeviceExtendMap.containsKey(deviceAddress)) {
+            bluetoothComms = mConnectedDeviceExtendMap.remove(deviceAddress);
+            bluetoothComms.createDisconnectToken().disconnect();
+        }
     }
 
     /**
@@ -240,6 +304,8 @@ public class EasyBle {
     public void disconnectAll() {
         Iterator<BluetoothComms> iterator = mConnectedDeviceExtendMap.values().iterator();
         while (iterator.hasNext()) {
+            BluetoothComms bluetoothComms = iterator.next();
+            bluetoothComms.createDisconnectToken().disconnect();
         }
     }
 
@@ -247,16 +313,60 @@ public class EasyBle {
      * 读取数据
      */
     public void read(String deviceAddress, String serviceUuid,
-                     String characteristicUuid, OnActionListener listener)
-            throws BluetoothException {
+                     String characteristicUuid, final OnActionListener listener) {
+        BluetoothComms bluetoothComms = null;
+        if (mConnectedDeviceExtendMap.containsKey(deviceAddress)) {
+            bluetoothComms = mConnectedDeviceExtendMap.get(deviceAddress);
+        }
+        if (bluetoothComms == null || !bluetoothComms.isConnected()) {
+            //无连接
+            return;
+        }
+        ReadToken readToken = bluetoothComms.createReadToken(serviceUuid, characteristicUuid);
+        if (listener != null) {
+            readToken.setOnActionListener(new OnActionListener() {
+                @Override
+                public void onSuccess(Object... args) {
+                    listener.onSuccess(args);
+                }
+
+                @Override
+                public void onFailure(BluetoothException exception) {
+                    listener.onFailure(exception);
+                }
+            });
+        }
+        readToken.read();
     }
 
     /**
      * 写数据
      */
     public void write(String deviceAddress, String serviceUuid,
-                      String characteristicUuid, byte[] data, OnActionListener listener)
-            throws BluetoothException {
+                      String characteristicUuid, byte[] data, final OnActionListener listener) {
+        BluetoothComms bluetoothComms = null;
+        if (mConnectedDeviceExtendMap.containsKey(deviceAddress)) {
+            bluetoothComms = mConnectedDeviceExtendMap.get(deviceAddress);
+        }
+        if (bluetoothComms == null || !bluetoothComms.isConnected()) {
+            //无连接
+            return;
+        }
+        WriteToken writeToken = bluetoothComms.createWriteToken(serviceUuid, characteristicUuid);
+        if (listener != null) {
+            writeToken.setOnActionListener(new OnActionListener() {
+                @Override
+                public void onSuccess(Object... args) {
+                    listener.onSuccess(args);
+                }
+
+                @Override
+                public void onFailure(BluetoothException exception) {
+                    listener.onFailure(exception);
+                }
+            });
+        }
+        writeToken.write(data);
     }
 
     /**
@@ -264,15 +374,90 @@ public class EasyBle {
      */
     public void notify(String deviceAddress, String serviceUuid,
                        String characteristicUuid, String descriptorUuid,
-                       boolean enable, boolean isIndication, OnActionListener listener)
-            throws BluetoothException {
+                       boolean enable, boolean isIndication, final OnActionListener listener) {
+        BluetoothComms bluetoothComms = null;
+        if (mConnectedDeviceExtendMap.containsKey(deviceAddress)) {
+            bluetoothComms = mConnectedDeviceExtendMap.get(deviceAddress);
+        }
+        if (bluetoothComms == null || !bluetoothComms.isConnected()) {
+            //无连接
+            return;
+        }
+        NotifyToken notifyToken = bluetoothComms.createNotifyToken(serviceUuid, characteristicUuid,
+                descriptorUuid);
+        if (listener != null) {
+            notifyToken.setOnActionListener(new OnActionListener() {
+                @Override
+                public void onSuccess(Object... args) {
+                    listener.onSuccess(args);
+                }
+
+                @Override
+                public void onFailure(BluetoothException exception) {
+                    listener.onFailure(exception);
+                }
+            });
+        }
+        notifyToken.setIndication(isIndication).notify(enable);
     }
 
     /**
      * 读取RSSI
      */
-    public void readRssi(String deviceAddress, OnActionListener listener)
-            throws BluetoothException {
+    public void readRssi(String deviceAddress, final OnActionListener listener) {
+        BluetoothComms bluetoothComms = null;
+        if (mConnectedDeviceExtendMap.containsKey(deviceAddress)) {
+            bluetoothComms = mConnectedDeviceExtendMap.get(deviceAddress);
+        }
+        if (bluetoothComms == null || !bluetoothComms.isConnected()) {
+            //无连接
+            return;
+        }
+        RssiToken rssiToken = bluetoothComms.createRssiToken();
+        if (listener != null) {
+            rssiToken.setOnActionListener(new OnActionListener() {
+                @Override
+                public void onSuccess(Object... args) {
+                    listener.onSuccess(args);
+                }
+
+                @Override
+                public void onFailure(BluetoothException exception) {
+                    listener.onFailure(exception);
+                }
+            });
+        }
+        rssiToken.readRssi();
+    }
+
+    /**
+     * 设置MTU
+     */
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+    public void setMTU(String deviceAddress, int mtu, final OnActionListener listener) {
+        BluetoothComms bluetoothComms = null;
+        if (mConnectedDeviceExtendMap.containsKey(deviceAddress)) {
+            bluetoothComms = mConnectedDeviceExtendMap.get(deviceAddress);
+        }
+        if (bluetoothComms == null || !bluetoothComms.isConnected()) {
+            //无连接
+            return;
+        }
+        MTUToken mtuToken = bluetoothComms.createMTUToken();
+        if (listener != null) {
+            mtuToken.setOnActionListener(new OnActionListener() {
+                @Override
+                public void onSuccess(Object... args) {
+                    listener.onSuccess(args);
+                }
+
+                @Override
+                public void onFailure(BluetoothException exception) {
+                    listener.onFailure(exception);
+                }
+            });
+        }
+        mtuToken.setMTU(mtu);
     }
 
     /**
@@ -312,9 +497,21 @@ public class EasyBle {
     /**
      * 设置蓝牙监听
      */
-    public void setBluetoothCommObserver(String deviceAddress, GattCommsObserver commObserver)
-            throws BluetoothException {
-        BluetoothComms comms = mConnectedDeviceExtendMap.get(deviceAddress);
+    public void addBluetoothCommObserver(String deviceAddress, GattCommsObserver commObserver) {
+        if (mConnectedDeviceExtendMap.containsKey(deviceAddress)) {
+            BluetoothComms bluetoothComms = mConnectedDeviceExtendMap.get(deviceAddress);
+            bluetoothComms.addGattCommsObserver(commObserver);
+        }
+    }
+
+    /**
+     * 取消蓝牙监听
+     */
+    public void removeBluetoothCommObserver(String deviceAddress, GattCommsObserver commObserver) {
+        if (mConnectedDeviceExtendMap.containsKey(deviceAddress)) {
+            BluetoothComms bluetoothComms = mConnectedDeviceExtendMap.get(deviceAddress);
+            bluetoothComms.removeGattCommsObserver(commObserver);
+        }
     }
 
     /**
@@ -323,8 +520,8 @@ public class EasyBle {
      * @return true 已连接
      */
     public boolean isConnected(String deviceAddress) {
-        BluetoothComms comms = mConnectedDeviceExtendMap.get(deviceAddress);
-        return comms != null && comms.isConnected();
+        BluetoothComms bluetoothComms = mConnectedDeviceExtendMap.get(deviceAddress);
+        return bluetoothComms != null && bluetoothComms.isConnected();
     }
 
     /**
@@ -333,8 +530,8 @@ public class EasyBle {
      * @return
      */
     public BluetoothDeviceExtend getConnectedBluetoothDeviceExtend(String deviceAddress) {
-        BluetoothComms comms = mConnectedDeviceExtendMap.get(deviceAddress);
-        return comms != null && comms.isConnected() ? comms.getBluetoothDeviceExtend() : null;
+        BluetoothComms bluetoothComms = mConnectedDeviceExtendMap.get(deviceAddress);
+        return bluetoothComms != null && bluetoothComms.isConnected() ? bluetoothComms.getBluetoothDeviceExtend() : null;
     }
 
     /**
@@ -349,8 +546,11 @@ public class EasyBle {
      *
      * @return
      */
-    public List<BluetoothGattService> getGattServiceList(String deviceAddress) throws BluetoothException {
-        BluetoothComms comms = mConnectedDeviceExtendMap.get(deviceAddress);
+    public List<BluetoothGattService> getGattServiceList(String deviceAddress) {
+        if (mConnectedDeviceExtendMap.containsKey(deviceAddress)) {
+            BluetoothComms bluetoothComms = mConnectedDeviceExtendMap.get(deviceAddress);
+            return bluetoothComms.getGattServiceList();
+        }
         return null;
     }
 
@@ -360,8 +560,11 @@ public class EasyBle {
      * @return
      */
     public List<BluetoothGattCharacteristic> getGattCharacteristicList(
-            String deviceAddress, BluetoothGattService gattService) throws BluetoothException {
-        BluetoothComms comms = mConnectedDeviceExtendMap.get(deviceAddress);
+            String deviceAddress, BluetoothGattService gattService) {
+        if (mConnectedDeviceExtendMap.containsKey(deviceAddress)) {
+            BluetoothComms bluetoothComms = mConnectedDeviceExtendMap.get(deviceAddress);
+            return bluetoothComms.getGattCharacteristicList(gattService);
+        }
         return null;
     }
 
@@ -371,8 +574,11 @@ public class EasyBle {
      * @return
      */
     public List<BluetoothGattDescriptor> getGattDescriptorList(
-            String deviceAddress, BluetoothGattCharacteristic gattCharacteristic) throws BluetoothException {
-        BluetoothComms comms = mConnectedDeviceExtendMap.get(deviceAddress);
+            String deviceAddress, BluetoothGattCharacteristic gattCharacteristic) {
+        if (mConnectedDeviceExtendMap.containsKey(deviceAddress)) {
+            BluetoothComms bluetoothComms = mConnectedDeviceExtendMap.get(deviceAddress);
+            return bluetoothComms.getGattDescriptorList(gattCharacteristic);
+        }
         return null;
     }
 

@@ -1,4 +1,4 @@
-package com.vivek.wo.ble.internal;
+package com.vivek.wo.ble;
 
 public class BluetoothException extends RuntimeException {
     public static final int BLUETOOTH_CALLBACK_TIMEOUT = -1000;//蓝牙请求响应超时

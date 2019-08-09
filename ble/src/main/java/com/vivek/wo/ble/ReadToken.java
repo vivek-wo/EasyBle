@@ -1,9 +1,6 @@
-package com.vivek.wo.ble.token;
+package com.vivek.wo.ble;
 
 import android.os.Handler;
-
-import com.vivek.wo.ble.OnActionListener;
-import com.vivek.wo.ble.internal.BluetoothException;
 
 public abstract class ReadToken extends Token {
 
@@ -15,7 +12,7 @@ public abstract class ReadToken extends Token {
         super(handler);
     }
 
-    public ReadToken setTimeout(int timeout) {
+    public ReadToken setTimeout(long timeout) {
         this.timeout = timeout;
         return this;
     }

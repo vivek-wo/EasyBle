@@ -1,4 +1,4 @@
-package com.vivek.wo.ble.scan;
+package com.vivek.wo.ble;
 
 import android.annotation.TargetApi;
 import android.bluetooth.BluetoothAdapter;
@@ -12,8 +12,6 @@ import android.os.Handler;
 import android.os.Looper;
 import android.support.annotation.RequiresApi;
 
-import com.vivek.wo.ble.BluetoothDeviceExtend;
-
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -24,11 +22,11 @@ public class ScanCallback implements ScanFilter {
     /**
      * 默认搜索时间
      */
-    public static final int DEFAULT_SCANSECOND = 10;
+    public static final int DEFAULT_SCAN_TIMEOUT = 10 * 1000;
 
     private BluetoothAdapter mBluetoothAdapter;
     private OnScanCallback mScanCallback;
-    private int scanSecond = DEFAULT_SCANSECOND;
+    private long scanTimeout = DEFAULT_SCAN_TIMEOUT;
     private Map<String, BluetoothDeviceExtend> mBluetoothDeviceExtendMap;
     private List<BluetoothDeviceExtend> mBluetoothDeviceExtendList;
     //    是否正在搜索
@@ -56,13 +54,13 @@ public class ScanCallback implements ScanFilter {
     }
 
     /**
-     * 设置搜索时间
+     * 设置搜索超时时间
      *
-     * @param scanSecond
+     * @param scanTimeout
      * @return
      */
-    public ScanCallback scanSecond(int scanSecond) {
-        this.scanSecond = scanSecond;
+    public ScanCallback scanTimeout(long scanTimeout) {
+        this.scanTimeout = scanTimeout;
         return this;
     }
 
@@ -131,8 +129,8 @@ public class ScanCallback implements ScanFilter {
     };
 
     private void setupTimeoutTask() {
-        if (this.scanSecond > 0) {
-            mHandler.postDelayed(mScanTimeoutRunnable, this.scanSecond * 1000);
+        if (this.scanTimeout > 0) {
+            mHandler.postDelayed(mScanTimeoutRunnable, this.scanTimeout);
         }
     }
 

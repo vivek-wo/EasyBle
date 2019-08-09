@@ -1,9 +1,6 @@
-package com.vivek.wo.ble.token;
+package com.vivek.wo.ble;
 
 import android.os.Handler;
-
-import com.vivek.wo.ble.OnActionListener;
-import com.vivek.wo.ble.internal.BluetoothException;
 
 public abstract class DisconnectToken extends Token {
 
@@ -15,7 +12,7 @@ public abstract class DisconnectToken extends Token {
         super(handler);
     }
 
-    public DisconnectToken setTimeout(int timeout) {
+    public DisconnectToken setTimeout(long timeout) {
         this.timeout = timeout;
         return this;
     }

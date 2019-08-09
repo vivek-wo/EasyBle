@@ -1,11 +1,8 @@
-package com.vivek.wo.ble.token;
+package com.vivek.wo.ble;
 
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.os.Handler;
-
-import com.vivek.wo.ble.OnActionListener;
-import com.vivek.wo.ble.internal.BluetoothException;
 
 public abstract class WriteToken extends Token {
     public static final int WRITE_TYPE_DEFAULT = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT;
@@ -22,7 +19,7 @@ public abstract class WriteToken extends Token {
         this.characteristic = characteristic;
     }
 
-    public WriteToken setTimeout(int timeout) {
+    public WriteToken setTimeout(long timeout) {
         this.timeout = timeout;
         return this;
     }

@@ -4,11 +4,6 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothManager;
 import android.content.Context;
 
-import com.vivek.wo.ble.internal.BluetoothException;
-import com.vivek.wo.ble.internal.GattCommsObserver;
-import com.vivek.wo.ble.scan.OnScanCallback;
-import com.vivek.wo.ble.scan.SingleFilterScanCallback;
-
 import java.util.List;
 
 public class IOTEasyBle implements GattCommsObserver {
@@ -24,6 +19,8 @@ public class IOTEasyBle implements GattCommsObserver {
     private String writableCharacteristicUuid;
     private String noticableCharacteristicUuid;
     private String noticableDescriptorUuid;
+    private long scanTimeout;
+    private long connectTimeout;
 
     IOTEasyBle(Builder builder) {
         mContext = builder.context;
@@ -37,6 +34,8 @@ public class IOTEasyBle implements GattCommsObserver {
         this.writableCharacteristicUuid = builder.writableCharacteristicUuid;
         this.noticableCharacteristicUuid = builder.noticableCharacteristicUuid;
         this.noticableDescriptorUuid = builder.noticableDescriptorUuid;
+        this.scanTimeout = builder.scanTimeout;
+        this.connectTimeout = builder.connectTimeout;
     }
 
     /**
@@ -55,7 +54,27 @@ public class IOTEasyBle implements GattCommsObserver {
      * @param listener
      * @throws BluetoothException
      */
-    public void notify(boolean enable, OnActionListener listener) throws BluetoothException {
+    public void notify(boolean enable, final OnActionListener listener) throws BluetoothException {
+        NotifyToken notifyToken = mBluetoothComms.createNotifyToken(serviceUuid,
+                noticableCharacteristicUuid, noticableDescriptorUuid);
+        if (listener != null) {
+            notifyToken.setOnActionListener(new OnActionListener() {
+                @Override
+                public void onSuccess(Object... args) {
+                    if (listener != null) {
+                        listener.onSuccess(args);
+                    }
+                }
+
+                @Override
+                public void onFailure(BluetoothException exception) {
+                    if (listener != null) {
+                        listener.onFailure(exception);
+                    }
+                }
+            });
+        }
+        notifyToken.notify(enable);
     }
 
     /**
@@ -66,38 +85,65 @@ public class IOTEasyBle implements GattCommsObserver {
      * @throws BluetoothException
      */
     public void write(byte[] data) throws BluetoothException {
+        write(data, null);
     }
 
     /**
-     * 先搜索后连接
-     */
-    public void scanConnect() {
-    }
-
-    /**
-     * 先搜索后连接
+     * 写数据
      *
-     * @param scanSecond
+     * @param data
+     * @return
+     * @throws BluetoothException
      */
-    public void scanConnect(int scanSecond) {
-        scanConnect(scanSecond, null);
+    public void write(byte[] data, final OnActionListener listener) throws BluetoothException {
+        WriteToken writeToken = mBluetoothComms.createWriteToken(serviceUuid, writableCharacteristicUuid);
+        if (listener != null) {
+            writeToken.setOnActionListener(new OnActionListener() {
+                @Override
+                public void onSuccess(Object... args) {
+                    if (listener != null) {
+                        listener.onSuccess(args);
+                    }
+                }
+
+                @Override
+                public void onFailure(BluetoothException exception) {
+                    if (listener != null) {
+                        listener.onFailure(exception);
+                    }
+                }
+            });
+        }
+        writeToken.write(data);
+
     }
 
     /**
-     * 先搜索后连接
-     *
-     * @param scanSecond
-     * @param listener
+     * 连接
      */
-    public void scanConnect(int scanSecond, final OnActionListener listener) {
-        innerScanConnect(scanSecond, listener);
-    }
-
-    private void innerScanConnect(int scanSecond, final OnActionListener listener) {
+    public void connect(final OnActionListener listener) {
         new SingleFilterScanCallback(mBluetoothAdapter,
                 new OnScanCallback() {
                     @Override
-                    public void onDeviceFound(BluetoothDeviceExtend bluetoothDeviceExtend, List<BluetoothDeviceExtend> result) {
+                    public void onDeviceFound(BluetoothDeviceExtend bluetoothDeviceExtend,
+                                              List<BluetoothDeviceExtend> result) {
+                        mBluetoothComms = new BluetoothComms(mContext, bluetoothDeviceExtend);
+                        mBluetoothComms.createConnectToken()
+                                .setOnActionListener(new OnActionListener() {
+                                    @Override
+                                    public void onSuccess(Object... args) {
+                                        if (listener != null) {
+                                            listener.onSuccess(args);
+                                        }
+                                    }
+
+                                    @Override
+                                    public void onFailure(BluetoothException exception) {
+                                        if (listener != null) {
+                                            listener.onFailure(exception);
+                                        }
+                                    }
+                                }).setTimeout(connectTimeout).connect();
                     }
 
                     @Override
@@ -107,45 +153,14 @@ public class IOTEasyBle implements GattCommsObserver {
                     @Override
                     public void onScanTimeout() {
                         if (listener != null) {
-                            BluetoothException exception = new BluetoothException(
-                                    "Scan timeout.");
-                            listener.onFailure(exception);
+                            listener.onFailure(new BluetoothException("Scan timeout."));
                         }
                     }
                 })
                 .setDeviceAddress(this.deviceAddress)
                 .setDeviceName(this.deviceName)
-                .scanSecond(scanSecond)
+                .scanTimeout(scanTimeout)
                 .scan();
-    }
-
-    /**
-     * 直接进行蓝牙连接
-     */
-    public void connect() throws BluetoothException {
-    }
-
-    /**
-     * 直接进行蓝牙连接
-     *
-     * @param timeout
-     */
-    public void connect(long timeout) throws BluetoothException {
-        connect(timeout, null);
-    }
-
-    /**
-     * 直接进行蓝牙连接
-     *
-     * @param timeout
-     * @param listener
-     */
-    public void connect(long timeout, OnActionListener listener)
-            throws BluetoothException {
-    }
-
-    private void connect(BluetoothDeviceExtend bluetoothDeviceExtend, long timeout,
-                         OnActionListener listener) {
     }
 
     @Override
@@ -163,6 +178,8 @@ public class IOTEasyBle implements GattCommsObserver {
     }
 
     public static final class Builder {
+        public static final long DEFAULT_SCAN_TIMEOUT = 1 * 1000;
+        public static final long DEFAULT_CONNECT_TIMEOUT = 1 * 1000;
         private Context context;
         private String deviceName;
         private String deviceAddress;
@@ -171,6 +188,8 @@ public class IOTEasyBle implements GattCommsObserver {
         private String writableCharacteristicUuid;
         private String noticableCharacteristicUuid;
         private String noticableDescriptorUuid;
+        private long scanTimeout = DEFAULT_SCAN_TIMEOUT;
+        private long connectTimeout = DEFAULT_CONNECT_TIMEOUT;
 
         public Builder(Context context) {
             this.context = context;
@@ -208,6 +227,16 @@ public class IOTEasyBle implements GattCommsObserver {
 
         public Builder setNoticableDescriptorUuid(String noticableDescriptorUuid) {
             this.noticableDescriptorUuid = noticableDescriptorUuid;
+            return this;
+        }
+
+        public Builder setScanTimeout(long scanTimeout) {
+            this.scanTimeout = scanTimeout;
+            return this;
+        }
+
+        public Builder setConnectTimeout(long connectTimeout) {
+            this.connectTimeout = connectTimeout;
             return this;
         }
 

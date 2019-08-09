@@ -1,4 +1,4 @@
-package com.vivek.wo.ble.scan;
+package com.vivek.wo.ble;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;

@@ -1,17 +1,14 @@
-package com.vivek.wo.ble.token;
+package com.vivek.wo.ble;
 
 import android.os.Handler;
 import android.os.Looper;
-
-import com.vivek.wo.ble.OnActionListener;
-import com.vivek.wo.ble.internal.BluetoothException;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public abstract class Token implements Runnable {
     private Handler mHandler;
     protected AtomicBoolean isTimeoutCallback = new AtomicBoolean(false);
-    protected int timeout;
+    protected long timeout;
     protected OnActionListener onActionListener;
 
     public Token() {

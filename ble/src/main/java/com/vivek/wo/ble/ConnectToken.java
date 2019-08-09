@@ -1,9 +1,6 @@
-package com.vivek.wo.ble.token;
+package com.vivek.wo.ble;
 
 import android.os.Handler;
-
-import com.vivek.wo.ble.OnActionListener;
-import com.vivek.wo.ble.internal.BluetoothException;
 
 public abstract class ConnectToken extends Token {
 
@@ -15,7 +12,7 @@ public abstract class ConnectToken extends Token {
         super(handler);
     }
 
-    public ConnectToken setTimeout(int timeout) {
+    public ConnectToken setTimeout(long timeout) {
         this.timeout = timeout;
         return this;
     }
@@ -32,7 +29,7 @@ public abstract class ConnectToken extends Token {
         }
     }
 
-    public void callback(BluetoothException exception) {
+    void callback(BluetoothException exception) {
         callbackRequest(exception);
     }
 

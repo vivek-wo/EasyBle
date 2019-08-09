@@ -1,9 +1,6 @@
-package com.vivek.wo.ble.token;
+package com.vivek.wo.ble;
 
 import android.os.Handler;
-
-import com.vivek.wo.ble.OnActionListener;
-import com.vivek.wo.ble.internal.BluetoothException;
 
 public abstract class RssiToken extends Token {
 
@@ -15,7 +12,7 @@ public abstract class RssiToken extends Token {
         super(handler);
     }
 
-    public RssiToken setTimeout(int timeout) {
+    public RssiToken setTimeout(long timeout) {
         this.timeout = timeout;
         return this;
     }
